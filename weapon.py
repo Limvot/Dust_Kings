@@ -1,13 +1,22 @@
 import copy
+import projectile
 from imageAndMapUtil import *
 
 class Weapon:
-	def __init__(self, tileList, position, projectile, projectileSpeed):
-		self.tileList = tileList
+	def __init__(self, weaponFile, position, owner):
+
+		self.config = loadConfigFile(weaponFile)
+
+		weaponFileDirectory = os.sep.join(weaponFile.split(os.sep)[:-1])
+		tileListDir = weaponFileDirectory + os.sep + self.config["TILE"]
+		self.tileList = parseImage(tileListDir, (0,0), (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"])), 0, -1, 1)
+		
 		self.position = position
 		self.angle = 0
-		self.projectile = projectile
-		self.projectileSpeed = projectileSpeed
+
+		projectilePath = weaponFileDirectory + os.sep + self.config["PROJECTILE"]
+		self.projectile = projectile.Projectile(projectilePath, owner)
+		self.projectileSpeed = float(self.config["PROJECTILE_SPEED"])
 
 	def setLevel(self, level):
 		self.level = level

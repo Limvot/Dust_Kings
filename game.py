@@ -38,7 +38,7 @@ def goMenu():
 
 		font = pygame.font.Font(None, 48)										#Font size
 
-		text = font.render("Play (H)oenn!", 1, (10, 10, 10))					#Each of these are the same, but drawn to the first 1/3 of the screen
+		text = font.render("Play!", 1, (10, 10, 10))					#Each of these are the same, but drawn to the first 1/3 of the screen
 		textpos = text.get_rect(centerx=screen.get_width()//3)
 		
 		screen.blit(text, (textpos[0], textpos[1]+100))
@@ -58,10 +58,11 @@ def goOverworld(world):
 	global screen
 	fullscreen = False
 
-	playerTileList = parseImage("data/sprMutant1Walk_strip4.png", (0,0), (24,24), 0, -1, 1)
-	weaponTileList = parseImage("data/sprBanditGun.png", (0,0), (24,8), 0, -1, 1)
-	projectileTileList = parseImage("data/sprBullet1_strip2.png", (0,0), (16,16), 0, -1, 1)
-	level = Level("data/level1.txt", screen, Person(playerTileList, (0,0), 3, [Weapon(weaponTileList,(0,0),Projectile(projectileTileList,1,2),1.5)]))
+	#playerTileList = parseImage("data/sprMutant1Walk_strip4.png", (0,0), (24,24), 0, -1, 1)
+	#weaponTileList = parseImage("data/sprBanditGun.png", (0,0), (24,8), 0, -1, 1)
+	#projectileTileList = parseImage("data/sprBullet1_strip2.png", (0,0), (16,16), 0, -1, 1)
+	#level = Level("data/level1.txt", screen, Person(playerTileList, (0,0), 3, [Weapon(weaponTileList,(0,0),Projectile(projectileTileList,1,2),1.5)]))
+	level = Level("data/level1.txt", screen, Person("data/playerFish.txt", (0,0)))
 	level.player.setLevel(level)
 	multiplier = 1
 

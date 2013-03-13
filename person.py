@@ -1,20 +1,27 @@
 #Person.py
 import math
+import weapon
 from pygame import *
 from imageAndMapUtil import *
 
 #This is the person class, which is used by both the player and NPCs. Holds info about the person and has the move and draw functionality
 class Person:
-	def __init__(self, initTileList, initPos, health, weapons):			#Init with image list (for drawing the charecter) and init to some initial position
-		self.position = [0,0]
-		self.position[0], self.position[1] = initPos #Assign the position list the values from the initPosition tupel/list
+	def __init__(self, characterFile, initPos):			#init to some initial position
+		self.position = initPos #Assign the position list the values from the initPosition tupel/list
 		self.previousPosition = [0,0]
 		self.previousPosition[0], self.previousPosition[1] = self.position
-		self.tileList = initTileList
-		self.weapons = weapons
+
+		self.config = loadConfigFile(characterFile)
+
+		characterFileDirectory = os.sep.join(characterFile.split(os.sep)[:-1])
+		tileListDir = characterFileDirectory + os.sep + self.config["IDLE"]
+		self.tileList = parseImage(tileListDir, (0,0), (int(self.config["IDLE_TILE_END_X"]),int(self.config["IDLE_TILE_END_Y"])), 0, -1, 1)
+		
+		defaultWeaponPath = characterFileDirectory + os.sep + self.config["DEFAULT_WEAPON"]
+		self.weapons = [weapon.Weapon(defaultWeaponPath, self.position, self)]
 
 		self.alive = 1
-		self.health = health
+		self.health = int(self.config["HEALTH"])
 		
 		self._movingPos = [0,0]			#This variable tells us how far we have to move in each direction. Each time we move a tile, it is advanced toward 0 by 1
 		self.ownPixelOffset = [0,0]		#This variable stores the current offset in pixels that we will draw to. It will be multiplied by the number/stage of the subframe drawing to advance
@@ -25,10 +32,13 @@ class Person:
 
 		self.level = 0
 
-	def collideWithProjectile(self, projectile):
+
+	def collideWithProjectile(self, projectile, level):
 		self.health -= projectile.damage
+		print(self.health)
 		if self.health <= 0:
 			self.alive = 0
+			print("Dead!")
 
 	def fireWeapon(self):
 		self.weapons[0].fire()
@@ -44,7 +54,9 @@ class Person:
 
 	def update(self, mousePos):
 
-		self.position = self._movingPos[0]+self.position[0],self._movingPos[1]+self.position[1]
+		newPos = self._movingPos[0]+self.position[0],self._movingPos[1]+self.position[1]
+		if not self.level.checkGround(newPos):
+			self.position = newPos
 		
 		relY = mousePos[1] - self.level.getScreenPosition(self.position)[1]
 		relX = mousePos[0] - self.level.getScreenPosition(self.position)[0]

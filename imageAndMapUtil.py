@@ -219,21 +219,13 @@ def scaleImageList2x(tileList):
 	for tile in tileList:
 		newTileList.append(pygame.transform.scale2x(tile))
 	return newTileList
-
-#Takes in filename of tile map and of the pickled map,
-#returns a map dictionary and a list of tile images
-def loadMap(mapImageName, mapPickleName, tileSize):
-	mapTiles = parseImage(mapImageName, (0,0), tileSize, 0, -1, 1)
-	mapDict = pickle.load( open(mapPickleName, "rb") )
-	return( (mapDict, mapTiles) )
 	
-def drawMap(mapDict, mapTiles, tileSize, sectionSize, sectionLocation):
+def drawMap(mapDict, tileSize, sectionSize, sectionLocation, defaultTile):
 	mapSection = pygame.Surface((tileSize[0]*sectionSize[0], tileSize[1]*sectionSize[1]))
 
 	for yPos in range(sectionLocation[1], sectionLocation[1]+sectionSize[1]):
 		for xPos in range(sectionLocation[0], sectionLocation[0]+sectionSize[0]):
-			#The index into mapTiles is found from the dictionary mapDict getting at a tupel of the current position, then indexing the returned tupel to 0, where the index is stored. indexing the returned tupel to 1 returns tile type
-			mapSection.blit(mapTiles[mapDict.get( (xPos, yPos), (0,0) )[0]], (tileSize[0]*(xPos-sectionLocation[0]), tileSize[1]*(yPos-sectionLocation[1]) ))
+			mapSection.blit(mapDict.get( (xPos, yPos), (defaultTile,0) )[0], (tileSize[0]*(xPos-sectionLocation[0]), tileSize[1]*(yPos-sectionLocation[1]) ))
 	
 	return(mapSection)
 
