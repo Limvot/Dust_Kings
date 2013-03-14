@@ -13,6 +13,12 @@ class Enemy(person.Person):
 		self.range = int(self.config["SIGHT_RANGE"])
 		self.fireChance = int(self.config["FIRE_CHANCE"])
 
+	def clone(self):
+		newSelf = super(Enemy, self).clone()
+		newSelf.range = self.range
+		newSelf.fireChance = self.fireChance
+		return(newSelf)
+
 	def die(self):
 		print("Enemy dead!")
 		self.level.numEnemies -= 1
@@ -45,5 +51,5 @@ class Enemy(person.Person):
 			self.go((math.cos(aimAngle), math.sin(aimAngle)))
 
 		if abs(self.level.player.position[0] - self.position[0]) < self.range and abs(self.level.player.position[1] - self.position[1]) < self.range:
-			if random.randint(0, self.fireChance) == 0:
+			if random.randrange(0, self.fireChance) == 0:
 				self.fireWeapon()

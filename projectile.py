@@ -1,4 +1,5 @@
 import math
+import copy
 from imageAndMapUtil import *
 
 class Projectile:
@@ -15,14 +16,22 @@ class Projectile:
 
 		self.position = (0,0)
 		self.velocity = (0,0)
+		self.angle = 0
+		self.framesLived = 0
 
 		self.owner = owner
 
+	def clone(self):
+		return(copy.copy(self))
+
 	def fire(self, position, angle, speed):
+		self.firstFrame = True
 		self.position = position
+		self.angle = angle
 		self.velocity = (math.cos(angle)*speed, math.sin(angle)*speed)
 
 	def update(self, level):
+		self.framesLived +=1
 		self.position = (self.position[0]+self.velocity[0], self.position[1]+self.velocity[1])
 		self.collide(level)
 
@@ -44,6 +53,18 @@ class Projectile:
 		level.remove(self)
 
 	def draw(self, level):
-		level.screen.blit(self.tileList[0], level.getScreenPosition(self.position))
+		if self.framesLived < 2 or len(self.tileList) == 1:
+			index = 0
+		else:
+			index = 1
+		if abs(self.angle) > math.pi/2:
+			flipSprite = True
+			angle = (self.angle-math.pi)*180/math.pi
+		else:
+			flipSprite = False
+			angle = -self.angle*180/math.pi
+		sprite = pygame.transform.rotate(self.tileList[index], angle)
+		sprite = pygame.transform.flip(sprite, flipSprite, False)
+		level.screen.blit(sprite, level.getScreenPosition(self.position))
 
 

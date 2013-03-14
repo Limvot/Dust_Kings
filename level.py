@@ -1,6 +1,7 @@
 import os
 import random
 import pygame
+import copy
 import math
 import enemy
 from imageAndMapUtil import *
@@ -10,12 +11,15 @@ class Level:
 		self.levelData = loadConfigFile(levelFile)
 		self.tileSize = int(self.levelData["TILE_SIZE_X"]), int(self.levelData["TILE_SIZE_Y"])
 		
-		levelFileDirectory = os.sep.join(levelFile.split(os.sep)[:-1])
-		floorTilesPath = levelFileDirectory + os.sep + self.levelData["FLOOR_TILES"]
-		wallTilesPath = levelFileDirectory + os.sep + self.levelData["WALL_TILES"]
+		self.levelFileDirectory = os.sep.join(levelFile.split(os.sep)[:-1])
+		floorTilesPath = self.levelFileDirectory + os.sep + self.levelData["FLOOR_TILES"]
+		wallTilesPath = self.levelFileDirectory + os.sep + self.levelData["WALL_TILES"]
 
 		self.wallTiles = parseImage(wallTilesPath, (0,0), self.tileSize, 0, -1, 1)
 		self.floorTiles = parseImage(floorTilesPath, (0,0), self.tileSize,0, -1, 1)
+		outOfBoundsStringList = self.levelData["OUT_OF_BOUNDS_COLOR"]
+		self.outOfBoundsTile = pygame.Surface(self.tileSize)
+		self.outOfBoundsTile.fill( (int(outOfBoundsStringList[0]),int(outOfBoundsStringList[1]),int(outOfBoundsStringList[2])) )
 
 		if (self.levelData["DOUBLE_TILE_SIZE"]) == "TRUE":
 			self.wallTiles = scaleImageList2x(self.wallTiles)
@@ -32,12 +36,6 @@ class Level:
 		self.screen = screen
 		self.sectionPos = (0,0)			#init some variables
 
-		self.gray = pygame.Surface(screen.get_size())
-		self.gray.fill( (185,200,254) )
-
-		self.white = pygame.Surface(self.tileSize)
-		self.white.fill( (255,255,255) )
-
 		self.pathWidth = int(self.levelData["PATH_WIDTH"])
 		self.mapDict = {}
 		self.generateMap()
@@ -53,16 +51,33 @@ class Level:
 
 		print("Level " + str(self.difficulity) + "!")
 
-		enemyFileDir = levelFileDirectory + os.sep + self.levelData["ENEMY"]
-		self.numEnemies = int(self.levelData["ENEMY_MULTIPLIER"])*self.difficulity
-		for i in range(self.numEnemies):
-			newPos = (random.randrange(0, self.size[0]), random.randrange(0, self.size[1]))
-			while (self.checkGround(newPos)):
-				newPos = (random.randint(0, self.size[0]), random.randint(0, self.size[1]))
-			newEnemy = enemy.Enemy(enemyFileDir, newPos)
-			newEnemy.setLevel(self)
-			self.addObject(newEnemy)
+		self.spawnEnemies()
 
+	def spawnEnemies(self):
+		#If the list at 0 is a list, i.e. we have multiple enemy tags, do for each one.
+		#b/c we can have one or multiple enemy tags (which is itself a list),
+		#we don't know if the list is going
+		#to be singlely or doublely nested.
+		print(self.levelData["ENEMY"])
+		if (isinstance(self.levelData["ENEMY"][0], list)):
+			enemyTagList = self.levelData["ENEMY"]
+		else:
+			enemyTagList = [self.levelData["ENEMY"]]
+		for enemyTag in enemyTagList:
+			print(enemyTag)
+			enemyFileDir = self.levelFileDirectory + os.sep + enemyTag[0]
+			numEnemies = int(enemyTag[1])*self.difficulity
+			enemyArchType = enemy.Enemy(enemyFileDir, (0,0))
+			for i in range(numEnemies):
+				newPos = (random.randrange(0, self.size[0]), random.randrange(0, self.size[1]))
+				while (self.checkGround(newPos)):
+					newPos = (random.randint(0, self.size[0]), random.randint(0, self.size[1]))
+				newEnemy = enemyArchType.clone()
+				newEnemy.setPosition(newPos)
+				newEnemy.setLevel(self)
+				self.addObject(newEnemy)
+				self.numEnemies += 1
+		print("Done generating", self.numEnemies, "enemies!")
 	def generatePath(self, position, length, width):
 		direction = [0,0]
 		direction[random.choice((0,1))] = random.choice([-1,1])
@@ -80,6 +95,13 @@ class Level:
 				for k in range(-width,width+1):	
 					self.mapDict[position[0] + j, position[1] + k] = (random.choice(self.floorTiles),0)
 
+					for l in range(-1,2):
+						for a in range(-1,2):
+							possibleWallPos = self.mapDict.get( (position[0] + j+l, position[1] + k+a), (0,0))
+							if possibleWallPos[0] == 0:
+								self.mapDict[(position[0] + j+l, position[1] + k+a)] = (random.choice(self.wallTiles), 1)
+
+
 			if random.randrange(0,20) == 0:
 				direction = [0,0]
 				direction[random.choice((0,1))] = random.choice([-1,1])
@@ -87,10 +109,6 @@ class Level:
 				self.generatePath(position, length-i, width)
 
 	def generateMap(self):
-		for i in range(self.size[0]):
-			for j in range(self.size[1]):
-				self.mapDict[ (i,j) ] = (random.choice(self.wallTiles), 1)
-
 		position = (random.randrange(0,self.size[0]), random.randrange(0,self.size[1]))
 		#Used to set the player's position
 		self.beginPosition = position
@@ -139,14 +157,21 @@ class Level:
 
 	def draw(self):
 		#draw level
-		self.screen.blit(self.gray, (0,0) ) #Background
-		self.screen.blit(drawMap(self.mapDict, self.tileSize, self.sectionSize, self.sectionPos, self.white), (0,0))	#Draw the new map
-
+		self.screen.blit(self.drawMap(self.mapDict, self.tileSize, self.sectionSize, self.sectionPos, self.wallTiles[0]), (0,0))
 		#draw objects
 		for obj in self.objects:
 			obj.draw(self)
 		self.player.draw(self)
 
 		pygame.display.flip()
+
+	def drawMap(self, mapDict, tileSize, sectionSize, sectionLocation, defaultTile):
+		mapSection = pygame.Surface((tileSize[0]*sectionSize[0], tileSize[1]*sectionSize[1]))
+	
+		for yPos in range(sectionLocation[1], sectionLocation[1]+sectionSize[1]):
+			for xPos in range(sectionLocation[0], sectionLocation[0]+sectionSize[0]):
+				mapSection.blit(mapDict.get( (xPos, yPos), (self.outOfBoundsTile,0) )[0], (tileSize[0]*(xPos-sectionLocation[0]), tileSize[1]*(yPos-sectionLocation[1]) ))
+		
+		return(mapSection)
 
 

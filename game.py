@@ -101,8 +101,12 @@ def goOverworld(world):
 					multiplier += 1
 				elif userInput == "x":
 					multiplier -= 1
-				elif userInput == "r":
+				elif userInput == "1":
 					level = Level("data/level1.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
+				elif userInput == "2":
+					level = Level("data/level2.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
+				elif userInput == "3":
+					level = Level("data/level3.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
 				elif userInput == "f":
 					fullscreen = False if fullscreen else True
 					if fullscreen:

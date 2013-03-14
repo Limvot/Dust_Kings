@@ -11,10 +11,41 @@ if not pygame.mixer: print("Sound will be disabled")
 def loadConfigFile(filePath):
 	configFile = open(filePath, "r")
 	configDict = {}
+	numInConfigDict = {}
 
 	for line in configFile.readlines():
 		lineSplit = line.split()
-		configDict[lineSplit[0]] = lineSplit[1]
+
+		#if there is none of this tag yet
+		if numInConfigDict.get(lineSplit[0], 0) == 0:
+			#there is now one of this tag
+			numInConfigDict[lineSplit[0]] = 1
+			#if it's a single value, just set it as the value
+			if len(lineSplit) == 2:
+				configDict[lineSplit[0]] = lineSplit[1]
+			#else, it is more than a single value, add the entire list
+			else:
+				configDict[lineSplit[0]] = lineSplit[1:]
+		#else, if there is one of this tag
+		elif numInConfigDict.get(lineSplit[0], 0) == 1:
+			#There is now one more
+			numInConfigDict[lineSplit[0]] += 1
+			#if just a single value, make a new list of the current value and the new value and set it to be the dictionary's value.
+			if len(lineSplit) == 2:
+				configDict[lineSplit[0]] = [configDict[lineSplit[0]], lineSplit[1]]
+			#else, it's a list, make a new list of the value now and the new list
+			else:
+				configDict[lineSplit[0]] = [configDict[lineSplit[0]], lineSplit[1:]]
+		#else, there is more than one of this tag
+		else:
+			#now one more
+			numInConfigDict[lineSplit[0]] += 1
+			#if just single value, append it to the current value list
+			if len(lineSplit) == 2:
+				configDict[lineSplit[0]].append(lineSplit[1])
+			#else, is a list, append the list to the current value list
+			else:
+				configDict[lineSplit[0]].append(lineSplit[1:])
 
 	return(configDict) 
 
@@ -218,15 +249,6 @@ def scaleImageList2x(tileList):
 	for tile in tileList:
 		newTileList.append(pygame.transform.scale2x(tile))
 	return newTileList
-	
-def drawMap(mapDict, tileSize, sectionSize, sectionLocation, defaultTile):
-	mapSection = pygame.Surface((tileSize[0]*sectionSize[0], tileSize[1]*sectionSize[1]))
-
-	for yPos in range(sectionLocation[1], sectionLocation[1]+sectionSize[1]):
-		for xPos in range(sectionLocation[0], sectionLocation[0]+sectionSize[0]):
-			mapSection.blit(mapDict.get( (xPos, yPos), (defaultTile,0) )[0], (tileSize[0]*(xPos-sectionLocation[0]), tileSize[1]*(yPos-sectionLocation[1]) ))
-	
-	return(mapSection)
 
 '''
 pygame.init()

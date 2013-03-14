@@ -1,5 +1,6 @@
 #Person.py
 import math
+import copy
 import weapon
 from pygame import *
 from imageAndMapUtil import *
@@ -39,11 +40,18 @@ class Person:
 
 		self.level = 0
 
-		self.flipSprite = False
+	def clone(self):
+		newSelf = copy.copy(self)
+		newWeapons = []
+		for weapon in self.weapons:
+			newWeapons.append(weapon.clone(newSelf))
+		newSelf.weapons = newWeapons
+		return(newSelf)
 
 
 	def collideWithProjectile(self, projectile, level):
 		self.health -= projectile.damage
+		print(self, "Hit by projectile", projectile, "with owner", projectile.owner)
 		print(self.health)
 		if self.health <= 0:
 			self.alive = False
@@ -63,6 +71,9 @@ class Person:
 		self.level = level
 		for weapon in self.weapons:
 			weapon.setLevel(level)
+
+	def setPosition(self, position):
+		self.position = position
 
 	def update(self, mousePos):
 		newPos = self._movingPos[0]+self.position[0],self._movingPos[1]+self.position[1]
@@ -99,20 +110,21 @@ class Person:
 
 	#This function gets the index into the tile list approite for our direction and self.whichStep
 	def getCurrentSprite(self):
-		tileList = self.idleTiles
 		if self._movingPos[0] != 0 or self._movingPos[1] != 0 :
 			tileList = self.walkTiles
+		else:
+			tileList = self.idleTiles
 
 		self.whichStep += 1
-		if self.whichStep > len(tileList):
+		if self.whichStep >= len(tileList):
 			self.whichStep = 0
 
-		if self._movingPos[0] < 0 and self.flipSprite != True:
-			self.flipSprite = True
-		elif self._movingPos[0] > 0 and self.flipSprite != False:
-			self.flipSprite = False
+		if abs(self.weapons[0].angle) > math.pi/2:
+			flipSprite = True
+		else:
+			flipSprite = False
 
-		return(pygame.transform.flip(tileList[self.whichStep%len(tileList)], self.flipSprite, False))
+		return(pygame.transform.flip(tileList[self.whichStep], flipSprite, False))
 
 	#This function draws the character.
 	def draw(self, level):

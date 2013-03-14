@@ -7,6 +7,8 @@ class Weapon:
 
 		self.config = loadConfigFile(weaponFile)
 
+		self.owner = owner
+
 		weaponFileDirectory = os.sep.join(weaponFile.split(os.sep)[:-1])
 		tileListDir = weaponFileDirectory + os.sep + self.config["TILE"]
 		self.tileList = parseImage(tileListDir, (0,0), (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"])), 0, -1, 1)
@@ -17,6 +19,20 @@ class Weapon:
 		projectilePath = weaponFileDirectory + os.sep + self.config["PROJECTILE"]
 		self.projectile = projectile.Projectile(projectilePath, owner)
 		self.projectileSpeed = float(self.config["PROJECTILE_SPEED"])
+
+	def clone(self, owner):
+		newSelf = copy.copy(self)
+		newSelf.projectile = self.projectile.clone()
+		#Comment this next line out to create a fun bug.
+		#The owner will never not be the enemyArchtype, meaning
+		#all enemies when in range of player will shoot themselves
+		#and die, making you like Death himself.
+		newSelf.setOwner(owner)
+		return(newSelf)
+
+	def setOwner(self, owner):
+		self.owner = owner
+		self.projectile.owner = owner
 
 	def setLevel(self, level):
 		self.level = level
@@ -34,5 +50,13 @@ class Weapon:
 		self.level.addObject(newProjectile)
 
 	def draw(self, level):
-		level.screen.blit(self.tileList[0], level.getScreenPosition(self.position))
+		if abs(self.angle) > math.pi/2:
+			flipSprite = True
+			angle = (self.angle-math.pi)*180/math.pi
+		else:
+			flipSprite = False
+			angle = -self.angle*180/math.pi
+		sprite = pygame.transform.rotate(self.tileList[0], angle)
+		sprite = pygame.transform.flip(sprite, flipSprite, False)
+		level.screen.blit(sprite, level.getScreenPosition(self.position))
 
