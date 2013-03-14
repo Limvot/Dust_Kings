@@ -9,7 +9,7 @@ class Weapon:
 
 		self.owner = owner
 
-		weaponFileDirectory = os.sep.join(weaponFile.split(os.sep)[:-1])
+		weaponFileDirectory = justDir(weaponFile)
 		tileListDir = weaponFileDirectory + os.sep + self.config["TILE"]
 		self.tileList = parseImage(tileListDir, (0,0), (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"])), 0, -1, 1)
 		

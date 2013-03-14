@@ -29,22 +29,22 @@ pygame.display.set_caption("Dust Kings")
 
 def goMenu():
 	screen.blit(gray, (0,0))		#Draw our gray background
-	if pygame.font:					#Only if fonts are enabled
-		font = pygame.font.Font(None, 68)										#Font size
-		text = font.render("Dust Kings", 1, (10, 10, 10))		#Font message
-		textpos = text.get_rect(centerx=screen.get_width()//2)					#Center of screen
-		screen.blit(text, textpos)												#Draw
+	#if pygame.font:					#Only if fonts are enabled
+	#	font = pygame.font.Font(None, 68)										#Font size
+	#	text = font.render("Dust Kings", 1, (10, 10, 10))		#Font message
+	#	textpos = text.get_rect(centerx=screen.get_width()//2)					#Center of screen
+	#	screen.blit(text, textpos)												#Draw
+#
+#		font = pygame.font.Font(None, 48)										#Font size
 
-		font = pygame.font.Font(None, 48)										#Font size
-
-		text = font.render("Play!", 1, (10, 10, 10))					#Each of these are the same, but drawn to the first 1/3 of the screen
-		textpos = text.get_rect(centerx=screen.get_width()//3)
-		
-		screen.blit(text, (textpos[0], textpos[1]+100))
-
-		text = font.render("or (Q)uit!", 1, (10, 10, 10))
-		textpos = text.get_rect(centerx=screen.get_width()//3)
-		screen.blit(text, (textpos[0], textpos[1]+400))
+#		text = font.render("Play!", 1, (10, 10, 10))					#Each of these are the same, but drawn to the first 1/3 of the screen
+#		textpos = text.get_rect(centerx=screen.get_width()//3)
+#		
+#		screen.blit(text, (textpos[0], textpos[1]+100))
+#
+#		text = font.render("or (Q)uit!", 1, (10, 10, 10))
+#		textpos = text.get_rect(centerx=screen.get_width()//3)
+#		screen.blit(text, (textpos[0], textpos[1]+400))
 
 
 	pygame.display.flip()			#Flip our display

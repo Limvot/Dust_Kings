@@ -9,7 +9,7 @@ if not pygame.font: print("Fonts will be disabled")
 if not pygame.mixer: print("Sound will be disabled")
 
 def loadConfigFile(filePath):
-	configFile = open(filePath, "r")
+	configFile = open(normalizePaths(filePath), "r")
 	configDict = {}
 	numInConfigDict = {}
 
@@ -49,6 +49,13 @@ def loadConfigFile(filePath):
 
 	return(configDict) 
 
+#convert from unix paths to system paths
+def normalizePaths(path):
+	return os.sep.join(path.split("/"))
+#return just the path up to file, not file itself. Not smart, just truncates
+def justDir(path):
+	return os.sep.join(normalizePaths(path).split(os.sep)[:-1])
+
 #This function takes in a number and advances it one toward zero, returning the new number and the number it subtracted to get it there 10 -> (9, 1), -10 -> (-9,-1)
 def incrementTo0(number):
 	if number == 0:
@@ -59,7 +66,7 @@ def incrementTo0(number):
 		return(number+1, -1)
 
 def load_image(name, colorkey=None):
-	fullname = name
+	fullname = normalizePaths(name)
 	try:
 		image = pygame.image.load(fullname)
 	except (pygame.error):

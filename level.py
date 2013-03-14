@@ -11,7 +11,7 @@ class Level:
 		self.levelData = loadConfigFile(levelFile)
 		self.tileSize = int(self.levelData["TILE_SIZE_X"]), int(self.levelData["TILE_SIZE_Y"])
 		
-		self.levelFileDirectory = os.sep.join(levelFile.split(os.sep)[:-1])
+		self.levelFileDirectory = justDir(levelFile)
 		floorTilesPath = self.levelFileDirectory + os.sep + self.levelData["FLOOR_TILES"]
 		wallTilesPath = self.levelFileDirectory + os.sep + self.levelData["WALL_TILES"]
 
