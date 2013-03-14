@@ -28,9 +28,7 @@ def incrementTo0(number):
 		return(number+1, -1)
 
 def load_image(name, colorkey=None):
-	#fullname = os.path.join('data', name)
 	fullname = name
-
 	try:
 		image = pygame.image.load(fullname)
 	except (pygame.error):
@@ -38,11 +36,11 @@ def load_image(name, colorkey=None):
 		print ("Full path was:", fullname)
 		raise (SystemExit)
 
-	image = image.convert()
+	#image = image.convert()
+	image = image.convert_alpha()
 	if colorkey is not None:
 		if colorkey is -1:
 			colorkey = image.get_at((0,0))
-		print(str(colorkey))
 		image.set_colorkey(colorkey, RLEACCEL)
 
 	return(image, image.get_rect())
@@ -64,11 +62,11 @@ def imageHash(image1, size):
 
 #takes in a file path and top corner and bottom corner x,y start and end nums, and a step,
 #returns a list of images
-def parseImage(filePath, topCorner, bottomCorner, start, end, step):
+def parseImage(filePath, topCorner, bottomCorner, start, end, step, alpha=None):
 	tileList = []
 	tileSize = (bottomCorner[0] - topCorner[0], bottomCorner[1] - topCorner[1])
 
-	mapFull, mapFullRect = load_image(filePath, -1)
+	mapFull, mapFullRect = load_image(filePath, alpha)
 	mapSize = mapFull.get_size()
 	numTiles = (mapSize[0]//bottomCorner[0], mapSize[1]//bottomCorner[1])
 
@@ -84,12 +82,13 @@ def parseImage(filePath, topCorner, bottomCorner, start, end, step):
 
 		xPos = number%(numTiles[0])
 
+
 		xPixBeg = (xPos * bottomCorner[0]) + topCorner[0]
 		xPixEnd = ((xPos+1) * bottomCorner[0])
 		yPixBeg = (yPos * bottomCorner[1]) + topCorner[1]
 		yPixEnd = ((yPos+1) * bottomCorner[1])
 
-		newTile = pygame.Surface(tileSize)
+		newTile = pygame.Surface(tileSize, flags=pygame.SRCALPHA)
 
 		pygame.surfarray.blit_array(newTile, mapFullPixArray[xPixBeg:xPixEnd,yPixBeg:yPixEnd])
 		tileList.append(newTile)

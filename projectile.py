@@ -29,6 +29,7 @@ class Projectile:
 	def collide(self, level):
 		if not level.checkInBounds(self):
 			level.remove(self)
+			return()
 		collidee = level.checkCollision(self, self.size, self.owner)
 		if collidee != 0:
 			collidee.collideWithProjectile(self, level)
@@ -36,10 +37,11 @@ class Projectile:
 			return()
 		if level.checkGround(self.position):
 			level.remove(self)
+			return()
 
 	def collideWithProjectile(self, projectile, level):
 		pass
-		#level.remove(self)
+		level.remove(self)
 
 	def draw(self, level):
 		level.screen.blit(self.tileList[0], level.getScreenPosition(self.position))

@@ -13,14 +13,21 @@ class Person:
 
 		self.config = loadConfigFile(characterFile)
 
+		self.tileEnd = (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"]))
+		self.tileOffset = (int(self.config["TILE_OFFSET_X"]),int(self.config["TILE_OFFSET_Y"]))
+
 		characterFileDirectory = os.sep.join(characterFile.split(os.sep)[:-1])
-		tileListDir = characterFileDirectory + os.sep + self.config["IDLE"]
-		self.tileList = parseImage(tileListDir, (0,0), (int(self.config["IDLE_TILE_END_X"]),int(self.config["IDLE_TILE_END_Y"])), 0, -1, 1)
+
+		idleTileDir = characterFileDirectory + os.sep + self.config["IDLE"]
+		self.idleTiles = parseImage(idleTileDir, (0,0), self.tileEnd, 0, -1, 1)
+
+		walkTileDir = characterFileDirectory + os.sep + self.config["WALK"]
+		self.walkTiles = parseImage(walkTileDir, (0,0), self.tileEnd, 0, -1, 1)
 		
 		defaultWeaponPath = characterFileDirectory + os.sep + self.config["DEFAULT_WEAPON"]
 		self.weapons = [weapon.Weapon(defaultWeaponPath, self.position, self)]
 
-		self.alive = 1
+		self.alive = True
 		self.health = int(self.config["HEALTH"])
 		
 		self._movingPos = [0,0]			#This variable tells us how far we have to move in each direction. Each time we move a tile, it is advanced toward 0 by 1
@@ -32,13 +39,18 @@ class Person:
 
 		self.level = 0
 
+		self.flipSprite = False
+
 
 	def collideWithProjectile(self, projectile, level):
 		self.health -= projectile.damage
 		print(self.health)
 		if self.health <= 0:
-			self.alive = 0
-			print("Dead!")
+			self.alive = False
+			self.die()
+
+	def die(self):
+		print("Person Died!")
 
 	def fireWeapon(self):
 		self.weapons[0].fire()
@@ -53,10 +65,17 @@ class Person:
 			weapon.setLevel(level)
 
 	def update(self, mousePos):
-
 		newPos = self._movingPos[0]+self.position[0],self._movingPos[1]+self.position[1]
 		if not self.level.checkGround(newPos):
 			self.position = newPos
+		else:
+			newPos = self._movingPos[0]+self.position[0],self.position[1]
+			if not self.level.checkGround(newPos):
+				self.position = newPos
+			else:
+				newPos = self.position[0],self._movingPos[1]+self.position[1]
+				if not self.level.checkGround(newPos):
+					self.position = newPos
 		
 		relY = mousePos[1] - self.level.getScreenPosition(self.position)[1]
 		relX = mousePos[0] - self.level.getScreenPosition(self.position)[0]
@@ -79,49 +98,27 @@ class Person:
 		self._inbetweanMove = True
 
 	#This function gets the index into the tile list approite for our direction and self.whichStep
-	def getFrameIndex(self):
-		if self.faceingDirection == (0,-1):
-			if self._inbetweanMove:				#Only use the other move frame's for each self.whichStep if we are moving
-				if self.whichStep == 1:
-					return(2)
-				elif self.whichStep == 2:
-					return(0)
-				elif self.whichStep == 3:
-					return(10)
-			return(0)							#Must be self.whichStep 0
-		elif self.faceingDirection == (0,1):
-			if self._inbetweanMove:				#Only use the other move frame's for each self.whichStep if we are moving
-				if self.whichStep == 1:
-					return(8)
-				elif self.whichStep == 2:
-					return(5)
-				elif self.whichStep == 3:
-					return(11)
-			return(5)							#Must be self.whichStep 0
-		elif self.faceingDirection == (-1,0):
-			if self._inbetweanMove:				#Only use the other move frame's for each self.whichStep if we are moving
-				if self.whichStep == 1:
-					return(3)
-				elif self.whichStep == 2:
-					return(6)
-				elif self.whichStep == 3:
-					return(9)
-			return(6)							#Must be self.whichStep 0
-		elif self.faceingDirection == (1,0):
-			if self._inbetweanMove:				#Only use the other move frame's for each self.whichStep if we are moving
-				if self.whichStep == 1:
-					return(4)
-				elif self.whichStep == 2:
-					return(1)
-				elif self.whichStep == 3:
-					return(7)
-			return(1)							#Must be self.whichStep 0
+	def getCurrentSprite(self):
+		tileList = self.idleTiles
+		if self._movingPos[0] != 0 or self._movingPos[1] != 0 :
+			tileList = self.walkTiles
 
-		return(0)
+		self.whichStep += 1
+		if self.whichStep > len(tileList):
+			self.whichStep = 0
+
+		if self._movingPos[0] < 0 and self.flipSprite != True:
+			self.flipSprite = True
+		elif self._movingPos[0] > 0 and self.flipSprite != False:
+			self.flipSprite = False
+
+		return(pygame.transform.flip(tileList[self.whichStep%len(tileList)], self.flipSprite, False))
 
 	#This function draws the character.
 	def draw(self, level):
 		#print(level.getScreenPosition(self.position))
-		level.screen.blit(self.tileList[self.getFrameIndex()], level.getScreenPosition(self.position))
+		screenPosition = level.getScreenPosition(self.position)
+		drawPosition =  screenPosition[0] + self.tileOffset[0], screenPosition[1] + self.tileOffset[1] #Probally negative
+		level.screen.blit(self.getCurrentSprite(), drawPosition)
 		self.weapons[0].draw(level)
 

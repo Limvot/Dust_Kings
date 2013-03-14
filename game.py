@@ -7,7 +7,6 @@ from level import *
 #init the pygame stuff
 pygame.init()
 
-pygame.key.set_repeat(1,0)
 clock = pygame.time.Clock()
 
 mousePos = (0,0)
@@ -62,12 +61,14 @@ def goOverworld(world):
 	#weaponTileList = parseImage("data/sprBanditGun.png", (0,0), (24,8), 0, -1, 1)
 	#projectileTileList = parseImage("data/sprBullet1_strip2.png", (0,0), (16,16), 0, -1, 1)
 	#level = Level("data/level1.txt", screen, Person(playerTileList, (0,0), 3, [Weapon(weaponTileList,(0,0),Projectile(projectileTileList,1,2),1.5)]))
-	level = Level("data/level1.txt", screen, Person("data/playerFish.txt", (0,0)))
-	level.player.setLevel(level)
+	difficulty = 1
+	level = Level("data/level1.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
 	multiplier = 1
 
 
 	mousePos = (0,0)
+
+	movingPos = (0,0)
 
 	stop = False
 	while stop == False:		#Go until we quit
@@ -75,25 +76,33 @@ def goOverworld(world):
 		level.update(mousePos)
 		level.draw()
 
-		level.player.go( (0,0) )
+		stop = not level.player.alive
+
+		if level.numEnemies == 0:
+			difficulty += 1
+			level = Level("data/level1.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
+
+		level.player.go( movingPos )
 
 		for event in pygame.event.get():
 			if event.type == KEYDOWN:
 				userInput = pygame.key.name(event.key)
 				if userInput == "left" or userInput == "a":
-					level.player.go( (-1,0) )
+					movingPos = movingPos[0] - 1, movingPos[1]
 				elif userInput == "right" or userInput == "d":
-					level.player.go( (1,0) )
+					movingPos = movingPos[0] + 1, movingPos[1]
 				elif userInput == "up" or userInput == "w":
-					level.player.go( (0,-1) )
+					movingPos = movingPos[0], movingPos[1] - 1
 				elif userInput == "down" or userInput == "s":
-					level.player.go( (0,1) )
+					movingPos = movingPos[0], movingPos[1] + 1
 				elif userInput == "x":
 					multiplier -= 1
 				elif userInput == "z":
 					multiplier += 1
 				elif userInput == "x":
 					multiplier -= 1
+				elif userInput == "r":
+					level = Level("data/level1.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
 				elif userInput == "f":
 					fullscreen = False if fullscreen else True
 					if fullscreen:
@@ -103,6 +112,17 @@ def goOverworld(world):
 					level.setScreen(screen)
 				elif userInput == "escape":
 					stop = True
+
+			elif event.type == KEYUP:
+				userInput = pygame.key.name(event.key)
+				if userInput == "left" or userInput == "a":
+					movingPos = movingPos[0] + 1, movingPos[1]
+				elif userInput == "right" or userInput == "d":
+					movingPos = movingPos[0] - 1, movingPos[1]
+				elif userInput == "up" or userInput == "w":
+					movingPos = movingPos[0], movingPos[1] + 1
+				elif userInput == "down" or userInput == "s":
+					movingPos = movingPos[0], movingPos[1] - 1
 
 			elif event.type == MOUSEMOTION:
 				mousePos = event.pos
@@ -117,5 +137,6 @@ def goOverworld(world):
 				stop = True
 
 		pygame.time.wait(15)
+	print("You did not become either the Wasteland King or the Dust King!")
 
 goMenu() #Run our menu to start
