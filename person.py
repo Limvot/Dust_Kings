@@ -28,8 +28,12 @@ class Person:
 		defaultWeaponPath = characterFileDirectory + os.sep + self.config["DEFAULT_WEAPON"]
 		self.weapons = [weapon.Weapon(defaultWeaponPath, self.position, self)]
 
+		self.framesPerSprite = int(self.config["FRAMES_PER_SPRITE"])
+
 		self.alive = True
 		self.health = int(self.config["HEALTH"])
+
+		self.speed = float(self.config["SPEED"])
 		
 		self._movingPos = [0,0]			#This variable tells us how far we have to move in each direction. Each time we move a tile, it is advanced toward 0 by 1
 		self.ownPixelOffset = [0,0]		#This variable stores the current offset in pixels that we will draw to. It will be multiplied by the number/stage of the subframe drawing to advance
@@ -105,7 +109,7 @@ class Person:
 
 	#This function tells the character how far to move, starting the move
 	def go(self, posTup):
-		self._movingPos[0], self._movingPos[1] = posTup	#Assign our movement variables to the input
+		self._movingPos[0], self._movingPos[1] = posTup[0]*self.speed, posTup[1]*self.speed	#Assign our movement variables to the input
 		self._inbetweanMove = True
 
 	#This function gets the index into the tile list approite for our direction and self.whichStep
@@ -116,7 +120,7 @@ class Person:
 			tileList = self.idleTiles
 
 		self.whichStep += 1
-		if self.whichStep >= len(tileList):
+		if self.whichStep >= len(tileList)*self.framesPerSprite:
 			self.whichStep = 0
 
 		if abs(self.weapons[0].angle) > math.pi/2:
@@ -124,7 +128,7 @@ class Person:
 		else:
 			flipSprite = False
 
-		return(pygame.transform.flip(tileList[self.whichStep], flipSprite, False))
+		return(pygame.transform.flip(tileList[self.whichStep//self.framesPerSprite], flipSprite, False))
 
 	#This function draws the character.
 	def draw(self, level):

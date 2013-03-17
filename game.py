@@ -90,7 +90,7 @@ def goOverworld(world):
 				if userInput == "left" or userInput == "a":
 					movingPos = movingPos[0] - 1, movingPos[1]
 				elif userInput == "right" or userInput == "d":
-					movingPos = movingPos[0] + 1, movingPos[1]
+					movingPos = movingPos[0] + 1, movingPos[1] 
 				elif userInput == "up" or userInput == "w":
 					movingPos = movingPos[0], movingPos[1] - 1
 				elif userInput == "down" or userInput == "s":

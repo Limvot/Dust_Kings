@@ -20,6 +20,8 @@ class Level:
 		outOfBoundsStringList = self.levelData["OUT_OF_BOUNDS_COLOR"]
 		self.outOfBoundsTile = pygame.Surface(self.tileSize)
 		self.outOfBoundsTile.fill( (int(outOfBoundsStringList[0]),int(outOfBoundsStringList[1]),int(outOfBoundsStringList[2])) )
+		self.outOfBoundsSurface = pygame.Surface(screen.get_size())
+		self.outOfBoundsSurface.fill( (int(outOfBoundsStringList[0]),int(outOfBoundsStringList[1]),int(outOfBoundsStringList[2])) )
 
 		if (self.levelData["DOUBLE_TILE_SIZE"]) == "TRUE":
 			self.wallTiles = scaleImageList2x(self.wallTiles)
@@ -114,6 +116,8 @@ class Level:
 		self.beginPosition = position
 		self.generatePath(position, self.size[0]*self.size[1]//12, self.pathWidth)
 
+		self.mapSurface = self.drawMap(self.mapDict, self.tileSize, self.size, self.sectionPos, self.wallTiles[0])
+
 	def setScreen(self, screen):
 		self.screen = screen
 
@@ -157,7 +161,9 @@ class Level:
 
 	def draw(self):
 		#draw level
-		self.screen.blit(self.drawMap(self.mapDict, self.tileSize, self.sectionSize, self.sectionPos, self.wallTiles[0]), (0,0))
+		self.screen.blit(self.outOfBoundsSurface, (0,0))
+		self.screen.blit(self.mapSurface, (-self.sectionPos[0]*self.tileSize[0],-self.sectionPos[1]*self.tileSize[1]))
+		#self.screen.blit(self.drawMap(self.mapDict, self.tileSize, self.sectionSize, self.sectionPos, self.wallTiles[0]), (0,0))
 		#draw objects
 		for obj in self.objects:
 			obj.draw(self)

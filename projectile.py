@@ -42,15 +42,20 @@ class Projectile:
 		collidee = level.checkCollision(self, self.size, self.owner)
 		if collidee != 0:
 			collidee.collideWithProjectile(self, level)
-			level.remove(self)
-			return()
+			if isinstance(collidee, Projectile):
+				if self.collideWithProjectile(collidee, level):
+					return()
+			else:
+				level.remove(self)
+				return()
 		if level.checkGround(self.position):
 			level.remove(self)
-			return()
 
 	def collideWithProjectile(self, projectile, level):
-		pass
-		level.remove(self)
+		if projectile.owner != self.owner:
+			level.remove(self)
+			return(True)
+		return(False)
 
 	def draw(self, level):
 		if self.framesLived < 2 or len(self.tileList) == 1:
