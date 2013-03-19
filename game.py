@@ -24,14 +24,16 @@ sectionSize = ( (screenSize[0]//tileSize[0]+1), (screenSize[1]//tileSize[1]+1) )
 screen = pygame.display.set_mode( screenSize )
 gray = pygame.Surface(screenSize)													#This grey is our background which shouldn't really ever show through
 gray.fill( (185,200,254) )
-pygame.display.set_caption("Dust Kings")
+gameConfig = loadConfigFile("data/game.txt")
+GAME_NAME = " ".join(gameConfig["GAME_NAME"])
+pygame.display.set_caption(GAME_NAME)
 
 
 def goMenu():
 	screen.blit(gray, (0,0))		#Draw our gray background
 	if pygame.font:					#Only if fonts are enabled
 		font = pygame.font.Font(None, 68)										#Font size
-		text = font.render("Dust Kings", 1, (10, 10, 10))		#Font message
+		text = font.render(GAME_NAME, 1, (10, 10, 10))		#Font message
 		textpos = text.get_rect(centerx=screen.get_width()//2)					#Center of screen
 		screen.blit(text, textpos)												#Draw
 
@@ -62,7 +64,7 @@ def goOverworld(world):
 	#projectileTileList = parseImage("data/sprBullet1_strip2.png", (0,0), (16,16), 0, -1, 1)
 	#level = Level("data/level1.txt", screen, Person(playerTileList, (0,0), 3, [Weapon(weaponTileList,(0,0),Projectile(projectileTileList,1,2),1.5)]))
 	difficulty = 1
-	level = Level("data/level1.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
+	level = Level("data/level1.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
 	multiplier = 1
 
 
@@ -80,7 +82,7 @@ def goOverworld(world):
 
 		if level.numEnemies == 0:
 			difficulty += 1
-			level = Level("data/level1.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
+			level = Level("data/level1.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
 
 		level.player.go( movingPos )
 
@@ -102,11 +104,11 @@ def goOverworld(world):
 				elif userInput == "x":
 					multiplier -= 1
 				elif userInput == "1":
-					level = Level("data/level1.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
+					level = Level("data/level1.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
 				elif userInput == "2":
-					level = Level("data/level2.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
+					level = Level("data/level2.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
 				elif userInput == "3":
-					level = Level("data/level3.txt", screen, Person("data/playerFish.txt", (0,0)), difficulty)
+					level = Level("data/level3.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
 				elif userInput == "f":
 					fullscreen = False if fullscreen else True
 					if fullscreen:
