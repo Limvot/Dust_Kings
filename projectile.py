@@ -7,7 +7,7 @@ class Projectile:
 
 		self.config = loadConfigFile(projectileFile)
 
-		projectileFileDirectory = os.sep.join(projectileFile.split(os.sep)[:-1])
+		projectileFileDirectory = justDir(projectileFile)
 		tileListDir = projectileFileDirectory + os.sep + self.config["TILE"]
 		self.tileList = parseImage(tileListDir, (0,0), (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"])), 0, -1, 1)
 

@@ -10,7 +10,8 @@ class Weapon:
 
 		self.owner = owner
 
-		weaponFileDirectory = os.sep.join(weaponFile.split(os.sep)[:-1])
+<<<<<<< HEAD
+		weaponFileDirectory = justDir(weaponFile)
 		if (self.config.get("TILE", 0) != 0):
 			tileListDir = weaponFileDirectory + os.sep + self.config["TILE"]
 			self.tileList = parseImage(tileListDir, (0,0), (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"])), 0, -1, 1)
@@ -20,6 +21,11 @@ class Weapon:
 		self.numProjectilesToFire = int(self.config.get("NUM_PROJECTILES", 1))
 
 		self.spread = float(self.config.get("SPREAD", 0))
+=======
+		weaponFileDirectory = justDir(weaponFile)
+		tileListDir = weaponFileDirectory + os.sep + self.config["TILE"]
+		self.tileList = parseImage(tileListDir, (0,0), (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"])), 0, -1, 1)
+>>>>>>> e9641c97f8783d24988044ab5c580f85fab6e7a3
 		
 		self.position = position
 		self.angle = 0

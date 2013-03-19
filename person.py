@@ -17,7 +17,7 @@ class Person:
 		self.tileEnd = (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"]))
 		self.tileOffset = (int(self.config["TILE_OFFSET_X"]),int(self.config["TILE_OFFSET_Y"]))
 
-		characterFileDirectory = os.sep.join(characterFile.split(os.sep)[:-1])
+		characterFileDirectory = justDir(characterFile)
 
 		idleTileDir = characterFileDirectory + os.sep + self.config["IDLE"]
 		self.idleTiles = parseImage(idleTileDir, (0,0), self.tileEnd, 0, -1, 1)
