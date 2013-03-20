@@ -21,60 +21,69 @@ frameDelay = 20
 screenSizeMultipler = 1
 screenSize = (420*screenSizeMultipler,340*screenSizeMultipler)
 sectionSize = ( (screenSize[0]//tileSize[0]+1), (screenSize[1]//tileSize[1]+1) )	#Adjust the tile section size to the screen size, so that it covers the entire screen
-screen = pygame.display.set_mode( screenSize )
-gray = pygame.Surface(screenSize)													#This grey is our background which shouldn't really ever show through
-gray.fill( (185,200,254) )
-gameConfig = loadConfigFile(data/game.txt)
+
+gameConfig = loadConfigFile("game.txt")
 GAME_NAME = " ".join(gameConfig["GAME_NAME"])
 pygame.display.set_caption(GAME_NAME)
 
+screen = pygame.display.set_mode( screenSize )
+background = pygame.Surface(screen.get_size())
+background.fill( (100,100,100) )
+background.blit(load_image(gameConfig["TITLE_SCREEN"])[0], (0,0))
+screen.blit(background, (0,0))
+pygame.display.flip()
+
+getKey(-1)
+
+#Wait for input
+background.blit(load_image(gameConfig["MENU_BACKGROUND"])[0], (0,0))
+
 
 def goMenu():
-	screen.blit(gray, (0,0))		#Draw our gray background
-<<<<<<< HEAD
+	screen.blit(background, (0,0))		#Draw our background
+
 	if pygame.font:					#Only if fonts are enabled
-		font = pygame.font.Font(None, 68)										#Font size
-		text = font.render(GAME_NAME, 1, (10, 10, 10))		#Font message
+		textOffset = screen.get_size()[1]//(len(gameConfig["CHARACTERS"])+2)
+		font = pygame.font.Font(None, 48)										#Font size
+		text = font.render(GAME_NAME, 1, (10, 10, 10))							#Font message
 		textpos = text.get_rect(centerx=screen.get_width()//2)					#Center of screen
 		screen.blit(text, textpos)												#Draw
 
-		font = pygame.font.Font(None, 48)										#Font size
-
-		text = font.render("Play!", 1, (10, 10, 10))					#Each of these are the same, but drawn to the first 1/3 of the screen
+		font = pygame.font.Font(None, 28)										#Font size
+		text = font.render("Choose a character", 1, (10, 10, 10))
 		textpos = text.get_rect(centerx=screen.get_width()//3)
 		
-		screen.blit(text, (textpos[0], textpos[1]+100))
-
-		text = font.render("or (Q)uit!", 1, (10, 10, 10))
-		textpos = text.get_rect(centerx=screen.get_width()//3)
-		screen.blit(text, (textpos[0], textpos[1]+400))
-=======
-	#if pygame.font:					#Only if fonts are enabled
-	#	font = pygame.font.Font(None, 68)										#Font size
-	#	text = font.render("Dust Kings", 1, (10, 10, 10))		#Font message
-	#	textpos = text.get_rect(centerx=screen.get_width()//2)					#Center of screen
-	#	screen.blit(text, textpos)												#Draw
-#
-#		font = pygame.font.Font(None, 48)										#Font size
-
-#		text = font.render("Play!", 1, (10, 10, 10))					#Each of these are the same, but drawn to the first 1/3 of the screen
-#		textpos = text.get_rect(centerx=screen.get_width()//3)
-#		
-#		screen.blit(text, (textpos[0], textpos[1]+100))
-#
-#		text = font.render("or (Q)uit!", 1, (10, 10, 10))
-#		textpos = text.get_rect(centerx=screen.get_width()//3)
-#		screen.blit(text, (textpos[0], textpos[1]+400))
->>>>>>> e9641c97f8783d24988044ab5c580f85fab6e7a3
+		screen.blit(text, (textpos[0], textpos[1]+textOffset))
+		
+		font = pygame.font.Font(None, 24)
+		for i in range(len(gameConfig["CHARACTERS"])):
+			charOption = "("+str(i)+") " + gameConfig["CHARACTERS"][i].split("/")[-1].split(".")[0] #Use the name of the file minus the extension and the path
+			text = font.render(charOption, 1, (10, 10, 10))
+			textpos = text.get_rect(centerx=screen.get_width()//2)
+			screen.blit(text, (textpos[0], textOffset*(i+2)))
 
 
 	pygame.display.flip()			#Flip our display
 
-	goOverworld("h")
+
+	goOverworld(gameConfig["CHARACTERS"][int(getKey(-1))])
+
+def goMessageScreen(message, keyWait):
+	screen.blit(background, (0,0))		#Draw our background
+
+	if pygame.font:					#Only if fonts are enabled										#Draw
+		font = pygame.font.Font(None, 38)										#Font size
+		text = font.render(message, 1, (10, 10, 10))
+		textpos = text.get_rect(centerx=screen.get_width()//2)
+		
+		screen.blit(text, (textpos[0], textpos[1]))
+
+	pygame.display.flip()			#Flip our display
+	getKey(keyWait)
 			
 
 
-def goOverworld(world):
+def goOverworld(player):
 	global screen
 	fullscreen = False
 
@@ -83,13 +92,15 @@ def goOverworld(world):
 	#projectileTileList = parseImage("data/sprBullet1_strip2.png", (0,0), (16,16), 0, -1, 1)
 	#level = Level("data/level1.txt", screen, Person(playerTileList, (0,0), 3, [Weapon(weaponTileList,(0,0),Projectile(projectileTileList,1,2),1.5)]))
 	difficulty = 1
-	level = Level("data/level1.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
+	level = Level(gameConfig["LEVEL_ROTATION"][0], screen, Person(player, (0,0)), difficulty)
 	multiplier = 1
 
 
 	mousePos = (0,0)
-
 	movingPos = (0,0)
+
+	currentLevel = 0
+	achievedWin = False
 
 	stop = False
 	while stop == False:		#Go until we quit
@@ -101,9 +112,18 @@ def goOverworld(world):
 
 		if level.numEnemies == 0:
 			difficulty += 1
-			level = Level("data/level1.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
+			if difficulty % int(gameConfig["LEVEL_ROTATE_EVERY"]) == 0:
+				currentLevel += 1
+				if currentLevel >= len(gameConfig["LEVEL_ROTATION"]):
+					currentLevel = 0
+			if difficulty == 10:
+				goMessageScreen(" ".join(gameConfig["WIN_MESSAGE"]), -1)
+				achievedWin = True
+			level = Level(gameConfig["LEVEL_ROTATION"][currentLevel], screen, Person(player, (0,0)), difficulty)
 
 		level.player.go( movingPos )
+
+		stop = not level.player.alive
 
 		for event in pygame.event.get():
 			if event.type == KEYDOWN:
@@ -122,12 +142,6 @@ def goOverworld(world):
 					multiplier += 1
 				elif userInput == "x":
 					multiplier -= 1
-				elif userInput == "1":
-					level = Level("data/level1.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
-				elif userInput == "2":
-					level = Level("data/level2.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
-				elif userInput == "3":
-					level = Level("data/level3.txt", screen, Person("data/playerEyes.txt", (0,0)), difficulty)
 				elif userInput == "f":
 					fullscreen = False if fullscreen else True
 					if fullscreen:
@@ -162,6 +176,10 @@ def goOverworld(world):
 				stop = True
 
 		pygame.time.wait(15)
-	print("You did not become either the Wasteland King or the Dust King!")
+
+	if achievedWin:
+		goMessageScreen(" ".join(gameConfig["WIN_DEATH_MESSAGE"]), -1)
+	else:
+		goMessageScreen(" ".join(gameConfig["DEATH_MESSAGE"]), -1)
 
 goMenu() #Run our menu to start

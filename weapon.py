@@ -10,7 +10,6 @@ class Weapon:
 
 		self.owner = owner
 
-<<<<<<< HEAD
 		weaponFileDirectory = justDir(weaponFile)
 		if (self.config.get("TILE", 0) != 0):
 			tileListDir = weaponFileDirectory + os.sep + self.config["TILE"]
@@ -21,12 +20,8 @@ class Weapon:
 		self.numProjectilesToFire = int(self.config.get("NUM_PROJECTILES", 1))
 
 		self.spread = float(self.config.get("SPREAD", 0))
-=======
 		weaponFileDirectory = justDir(weaponFile)
-		tileListDir = weaponFileDirectory + os.sep + self.config["TILE"]
-		self.tileList = parseImage(tileListDir, (0,0), (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"])), 0, -1, 1)
->>>>>>> e9641c97f8783d24988044ab5c580f85fab6e7a3
-		
+	
 		self.position = position
 		self.angle = 0
 
@@ -41,7 +36,7 @@ class Weapon:
 		#The owner will never not be the enemyArchtype, meaning
 		#all enemies when in range of player will shoot themselves
 		#and die, making you like Death himself.
-		newSelf.setOwner(owner)
+		#newSelf.setOwner(owner)
 		return(newSelf)
 
 	def setOwner(self, owner):

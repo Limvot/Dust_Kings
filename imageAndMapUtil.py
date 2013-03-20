@@ -56,6 +56,37 @@ def normalizePaths(path):
 def justDir(path):
 	return os.sep.join(normalizePaths(path).split(os.sep)[:-1])
 
+#getInput waits a certain ammount of time (-1 for indefinite) for one character input, and returns it
+def getKey(pauseTime=0, waitTime=5):
+	if pauseTime < 0:
+		while True:	#Wait forever
+			for event in pygame.event.get():
+				if event.type == QUIT:
+					return("QUIT")
+				elif event.type == KEYDOWN:
+					return(pygame.key.name(event.key))
+		pygame.time.wait(waitTime)
+
+	if pauseTime == 0:
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				return("QUIT")
+			elif event.type == KEYDOWN:
+				return(pygame.key.name(event.key))
+		return None #No input
+
+	beginningTicks = pygame.time.get_ticks()					#Get time now
+	while beginningTicks + pauseTime > pygame.time.get_ticks():	#While ending time is greater than current time
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				return("QUIT")
+			elif event.type == KEYDOWN:
+				return(pygame.key.name(event.key))
+		pygame.time.wait(waitTime)
+
+	return None	#No input
+
+
 #This function takes in a number and advances it one toward zero, returning the new number and the number it subtracted to get it there 10 -> (9, 1), -10 -> (-9,-1)
 def incrementTo0(number):
 	if number == 0:
