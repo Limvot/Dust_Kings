@@ -32,6 +32,7 @@ class Level:
 		self.previousSectionPos = [0,0]
 		self.sectionPixelOffset = (0,0)
 		self.screenPos = [0,0]
+		self.recoilOffset = (0,0)
 
 		self.size = ( int(self.levelData["SIZE_X"]), int(self.levelData["SIZE_Y"]))
 		
@@ -43,6 +44,7 @@ class Level:
 		self.generateMap()
 
 		self.objects = []
+		self.objectsToRemove = []
 		self.player = player
 		self.player.setLevel(self)
 		self.player.position = self.beginPosition
@@ -84,34 +86,46 @@ class Level:
 		direction = [0,0]
 		direction[random.choice((0,1))] = random.choice([-1,1])
 
+		#for the length of the path
 		for i in range(length):
+			#get new position
 			position = position[0] + direction[0], position[1] + direction[1]
-			if position[0]+width >= self.size[0] or position[0]-width <= 0:
+
+			#make sure not out of bounds in X plus or minus 1 because of edge walls
+			if position[0]+width+1 >= self.size[0] or position[0]-width-1 <= 0:
 				direction[0] = -direction[0]
 				position = position[0] + direction[0], position[1] + direction[1]
 
-			if position[1]+width >= self.size[1] or position[1]-width <= 0:
+			#make sure not out of bounds in Y, plus or minus 1 because of edge walls
+			if position[1]+width+1 >= self.size[1] or position[1]-width-1 <= 0:
 				direction[1] = - direction[1]
 				position = position[0] + direction[0], position[1] + direction[1]
+
+			#Put floor tiles everywhere in the width around our position
 			for j in range(-width,width+1):
 				for k in range(-width,width+1):	
 					self.mapDict[position[0] + j, position[1] + k] = (random.choice(self.floorTiles),0)
 
+					#put walls around the sides of the current area if there are not already tiles there
 					for l in range(-1,2):
 						for a in range(-1,2):
 							possibleWallPos = self.mapDict.get( (position[0] + j+l, position[1] + k+a), (0,0))
 							if possibleWallPos[0] == 0:
 								self.mapDict[(position[0] + j+l, position[1] + k+a)] = (random.choice(self.wallTiles), 1)
 
-
+			#If some random chance, choose new direction
 			if random.randrange(0,20) == 0:
 				direction = [0,0]
 				direction[random.choice((0,1))] = random.choice([-1,1])
+			#If some random chance, spawn a new path with length = our remaining length
 			if random.randrange(0,self.size[0]*self.size[1]) == 0:
 				self.generatePath(position, length-i, width)
 
 	def generateMap(self):
 		position = (random.randrange(0,self.size[0]), random.randrange(0,self.size[1]))
+		#Keep choosing random position until position +- pathWidth is within size.
+		while not (position[0] - self.pathWidth > 0 and position[0] + self.pathWidth < self.size[0] and position[1] - self.pathWidth > 0 and position[1] + self.pathWidth < self.size[1]):
+			position = ( random.randrange(0,self.size[0]), random.randrange(0,self.size[1]) )
 		#Used to set the player's position
 		self.beginPosition = position
 		self.generatePath(position, self.size[0]*self.size[1]//12, self.pathWidth)
@@ -125,7 +139,7 @@ class Level:
 		self.objects.append(obj)
 
 	def remove(self, obj):
-		self.objects.remove(obj)
+		self.objectsToRemove.append(obj)
 
 	def checkInBounds(self, obj):
 		if obj.position[0] < 0 or obj.position[0] > self.size[0] or obj.position[1] < 0 or obj.position[1] > self.size[1]:
@@ -133,19 +147,26 @@ class Level:
 		return(1)
 
 	def checkCollision(self, obj, objRange, excluded):
+		collidingList = []
 		#Check for objects in list
 		for otherObj in self.objects:
 			if otherObj != obj and otherObj != excluded and math.fabs(otherObj.position[0] - obj.position[0]) < objRange and math.fabs(otherObj.position[1] - obj.position[1]) < objRange:
-				return(otherObj)
+				collidingList.append(otherObj)
 		#Check for player
 		if self.player != obj and self.player != excluded and math.fabs(self.player.position[0] - obj.position[0]) < objRange and math.fabs(self.player.position[1] - obj.position[1]) < objRange:
-			return(self.player)
-		return(0)
+			collidingList.append(self.player)
+		return(collidingList)
 
 	def checkGround(self, position):
 		return self.mapDict.get( (math.floor(position[0]), math.floor(position[1]) ), (0,1))[1]
 
 	def update(self, mousePos):
+		#Delete all the objects schecueld for removal
+		for delObj in self.objectsToRemove:
+			if delObj in self.objects:
+				self.objects.remove(delObj)
+		self.objectsToRemove = []
+
 		for obj in self.objects:
 			obj.update(self)
 		self.player.update(mousePos)
@@ -158,12 +179,15 @@ class Level:
 	def getScreenPosition(self, position):
 		return ( self.tileSize[0]*(position[0]-self.sectionPos[0]) + self.sectionPixelOffset[0], self.tileSize[1]*(position[1]-self.sectionPos[1]) + self.sectionPixelOffset[1] )
 
+	def addRecoil(self, recoil, recoilAngle):
+		self.recoilOffset = int(-recoil*math.cos(recoilAngle)), int(-recoil*math.sin(recoilAngle))
 
 	def draw(self):
 		#draw level
 		self.screen.blit(self.outOfBoundsSurface, (0,0))
-		self.screen.blit(self.mapSurface, (-self.sectionPos[0]*self.tileSize[0],-self.sectionPos[1]*self.tileSize[1]))
-		#self.screen.blit(self.drawMap(self.mapDict, self.tileSize, self.sectionSize, self.sectionPos, self.wallTiles[0]), (0,0))
+		self.screen.blit(self.mapSurface, (-self.sectionPos[0]*self.tileSize[0]+self.recoilOffset[0],-self.sectionPos[1]*self.tileSize[1]+self.recoilOffset[1]) )
+		#Notice the float division, then convert to int. This is because -1//3 is still -1, but int(-1/3) is 0.
+		self.recoilOffset = int(self.recoilOffset[0]/2),int(self.recoilOffset[1]/2)
 		#draw objects
 		for obj in self.objects:
 			obj.draw(self)

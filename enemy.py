@@ -23,13 +23,18 @@ class Enemy(person.Person):
 		print("Enemy dead!")
 		self.level.numEnemies -= 1
 		print("Number of enemies:",self.level.numEnemies)
-		self.level.remove(self)
+
 
 	def update(self, mousePos):
+
 		newPos = self._movingPos[0]+self.position[0],self._movingPos[1]+self.position[1]
 		if not self.level.checkGround(newPos):
 			self.position = newPos
-		
+		#We check for death after moving so can still get death-scene recoil
+		if not self.alive:
+			#So we don't keep moving
+			self._movingPos = (0,0)
+			return()
 		relY = self.level.player.position[1] - self.position[1]
 		relX = self.level.player.position[0] - self.position[0]
 

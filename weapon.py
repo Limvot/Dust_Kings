@@ -29,6 +29,9 @@ class Weapon:
 		self.projectile = projectile.Projectile(projectilePath, owner)
 		self.projectileSpeed = float(self.config["PROJECTILE_SPEED"])
 
+		self.recoil = int(self.config.get("RECOIL", 0))
+		self.knockback = int(self.config.get("KNOCKBACK", 0))
+
 	def clone(self, owner):
 		newSelf = copy.copy(self)
 		newSelf.projectile = self.projectile.clone()
@@ -36,7 +39,7 @@ class Weapon:
 		#The owner will never not be the enemyArchtype, meaning
 		#all enemies when in range of player will shoot themselves
 		#and die, making you like Death himself.
-		#newSelf.setOwner(owner)
+		newSelf.setOwner(owner)
 		return(newSelf)
 
 	def setOwner(self, owner):
@@ -61,8 +64,10 @@ class Weapon:
 				fireAngle = self.angle
 
 			newProjectile = copy.copy(self.projectile)
-			newProjectile.fire(self.position, fireAngle, self.projectileSpeed)
+			newProjectile.fire(self.position, fireAngle, self.projectileSpeed, self.knockback)
 			self.level.addObject(newProjectile)
+
+		self.level.addRecoil(self.recoil, self.angle)
 
 	def draw(self, level):
 

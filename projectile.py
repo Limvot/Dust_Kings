@@ -1,5 +1,6 @@
 import math
 import copy
+import person
 from imageAndMapUtil import *
 
 class Projectile:
@@ -16,6 +17,7 @@ class Projectile:
 
 		self.position = (0,0)
 		self.velocity = (0,0)
+		self.knockback = 0
 		self.angle = 0
 		self.framesLived = 0
 
@@ -24,10 +26,11 @@ class Projectile:
 	def clone(self):
 		return(copy.copy(self))
 
-	def fire(self, position, angle, speed):
+	def fire(self, position, angle, speed, knockback):
 		self.firstFrame = True
 		self.position = position
 		self.angle = angle
+		self.knockback = knockback
 		self.velocity = (math.cos(angle)*speed, math.sin(angle)*speed)
 
 	def update(self, level):
@@ -39,15 +42,16 @@ class Projectile:
 		if not level.checkInBounds(self):
 			level.remove(self)
 			return()
-		collidee = level.checkCollision(self, self.size, self.owner)
-		if collidee != 0:
+		for collidee in level.checkCollision(self, self.size, self.owner):
 			collidee.collideWithProjectile(self, level)
 			if isinstance(collidee, Projectile):
-				if self.collideWithProjectile(collidee, level):
+				self.collideWithProjectile(collidee, level)
+			#Only collide with alive entities, dead ones don't matter.
+			elif isinstance(collidee, person.Person):
+				if collidee.alive:
+					level.remove(self)
 					return()
-			else:
-				level.remove(self)
-				return()
+
 		if level.checkGround(self.position):
 			level.remove(self)
 

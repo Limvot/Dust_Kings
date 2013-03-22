@@ -19,11 +19,17 @@ class Person:
 
 		characterFileDirectory = justDir(characterFile)
 
-		idleTileDir = characterFileDirectory + os.sep + self.config["IDLE"]
-		self.idleTiles = parseImage(idleTileDir, (0,0), self.tileEnd, 0, -1, 1)
+		idleTilePath = characterFileDirectory + os.sep + self.config["IDLE"]
+		self.idleTiles = parseImage(idleTilePath, (0,0), self.tileEnd, 0, -1, 1)
 
-		walkTileDir = characterFileDirectory + os.sep + self.config["WALK"]
-		self.walkTiles = parseImage(walkTileDir, (0,0), self.tileEnd, 0, -1, 1)
+		walkTilePath = characterFileDirectory + os.sep + self.config["WALK"]
+		self.walkTiles = parseImage(walkTilePath, (0,0), self.tileEnd, 0, -1, 1)
+
+		hurtTilePath = characterFileDirectory + os.sep + self.config["HURT"]
+		self.hurtTiles = parseImage(hurtTilePath, (0,0), self.tileEnd, 0, -1, 1)
+
+		deadTilePath = characterFileDirectory + os.sep + self.config["DEAD"]
+		self.deadTiles = parseImage(deadTilePath, (0,0), self.tileEnd, 0, -1, 1)
 		
 		defaultWeaponPath = characterFileDirectory + os.sep + self.config["DEFAULT_WEAPON"]
 		self.weapons = [weapon.Weapon(defaultWeaponPath, self.position, self)]
@@ -40,7 +46,9 @@ class Person:
 		self._inbetweanMove = False		#Inbetween move is a bool that tells us if we're still moving
 
 		self.faceingDirection = (0,-1)
+		self.flipSprite = False
 		self.whichStep = 0
+		self.hurtFrame = 0
 
 		self.level = 0
 
@@ -54,12 +62,21 @@ class Person:
 
 
 	def collideWithProjectile(self, projectile, level):
+		#Not affected by projectiles if dead
+		if not self.alive:
+			return()
+
 		self.health -= projectile.damage
-		print(self, "Hit by projectile", projectile, "with owner", projectile.owner)
-		print(self.health)
+		#print(self, "Hit by projectile", projectile, "with owner", projectile.owner)
+		#print(self.health)
 		if self.health <= 0:
 			self.alive = False
+			self.deadFrame = len(self.deadTiles)
 			self.die()
+
+		self.go( ((self.position[0]-projectile.position[0])*projectile.knockback,(self.position[1]-projectile.position[1])*projectile.knockback) )
+		self.hurtFrame = len(self.hurtTiles)
+
 
 	def die(self):
 		print("Person Died!")
@@ -114,7 +131,17 @@ class Person:
 
 	#This function gets the index into the tile list approite for our direction and self.whichStep
 	def getCurrentSprite(self):
-		if self._movingPos[0] != 0 or self._movingPos[1] != 0 :
+		if not self.alive:
+			tileList = self.deadTiles
+			if self.deadFrame == 0:
+						return(pygame.transform.flip(tileList[-1], self.flipSprite, False))
+			elif self.whichStep%self.framesPerSprite == 0:
+				self.deadFrame -= 1
+		elif self.hurtFrame != 0:
+			tileList = self.hurtTiles
+			if self.whichStep%self.framesPerSprite == 0:
+				self.hurtFrame -= 1
+		elif self._movingPos[0] != 0 or self._movingPos[1] != 0 :
 			tileList = self.walkTiles
 		else:
 			tileList = self.idleTiles
@@ -124,11 +151,11 @@ class Person:
 			self.whichStep = 0
 
 		if abs(self.weapons[0].angle) > math.pi/2:
-			flipSprite = True
+			self.flipSprite = True
 		else:
-			flipSprite = False
+			self.flipSprite = False
 
-		return(pygame.transform.flip(tileList[self.whichStep//self.framesPerSprite], flipSprite, False))
+		return(pygame.transform.flip(tileList[self.whichStep//self.framesPerSprite], self.flipSprite, False))
 
 	#This function draws the character.
 	def draw(self, level):
