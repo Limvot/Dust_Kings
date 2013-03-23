@@ -19,7 +19,7 @@ frameDelay = 20
 
 #We have a big screen
 screenSizeMultipler = 1
-screenSize = (420*screenSizeMultipler,340*screenSizeMultipler)
+screenSize = (320*screenSizeMultipler,240*screenSizeMultipler)
 sectionSize = ( (screenSize[0]//tileSize[0]+1), (screenSize[1]//tileSize[1]+1) )	#Adjust the tile section size to the screen size, so that it covers the entire screen
 
 gameConfig = loadConfigFile("game.txt")
