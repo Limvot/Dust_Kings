@@ -228,8 +228,6 @@ class Level:
 			obj.draw(self)
 		self.player.draw(self)
 
-		pygame.display.flip()
-
 	def drawMap(self, mapDict, tileSize, sectionSize, sectionLocation, defaultTile):
 		mapSection = pygame.Surface((tileSize[0]*sectionSize[0], tileSize[1]*sectionSize[1]))
 	

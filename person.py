@@ -38,6 +38,12 @@ class Person:
 
 		self.alive = True
 		self.health = int(self.config["HEALTH"])
+		self.maxHealth = self.health
+
+		self.plrLevel = 0
+
+		self.exp = 0
+		self.expPerLevel = self.config.get("EXP_PER_LEVEL", 20)
 
 		self.speed = float(self.config["SPEED"])
 		

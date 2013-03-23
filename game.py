@@ -80,6 +80,38 @@ def goMessageScreen(message, keyWait):
 
 	pygame.display.flip()			#Flip our display
 	getKey(keyWait)
+
+def drawHUD(level, expBar, healthBar):
+	BUFFER = 10
+
+	healthStr = str(level.player.health) + "/" + str(level.player.maxHealth)
+	exp = level.player.exp - level.player.expPerLevel*level.player.plrLevel 
+
+	expBarSize = expBar[0].get_size()
+	healthBarSize = healthBar[0].get_size()
+
+	if pygame.font:					#Only if fonts are enabled										#Draw
+		font = pygame.font.Font(None, 18)
+
+		expPct = int(exp/level.player.expPerLevel * (len(expBar)-1))
+		screen.blit(expBar[expPct], (0,0) )
+		text = font.render(str(exp), 1, (10, 10, 10))
+		expBlitPos = expBarSize[0]//2 - text.get_width()//2, expBarSize[1] + BUFFER
+		screen.blit(text, expBlitPos)
+
+		healthPct = (len(healthBar)-1)-int(level.player.health/level.player.maxHealth * (len(healthBar)-1))
+		screen.blit(healthBar[healthPct], (expBarSize[0]+BUFFER,0) )
+		text = font.render(healthStr, 1, (10, 10, 10))
+		healthBlitPos = healthBarSize[0]//2 - text.get_width()//2, healthBarSize[1]//2 - text.get_height()//2
+		healthBlitPos = healthBlitPos[0]+expBarSize[0]+BUFFER, healthBlitPos[1]
+		screen.blit(text, healthBlitPos )
+	else:
+		print(expStr, HUDString)
+	i = 0
+	for playerWeapon in level.player.weapons:
+		if playerWeapon.tileList != 0:
+			screen.blit(playerWeapon.tileList[0], (expBarSize[0]+BUFFER, i*BUFFER+expBarSize[1]))
+		i += 1
 			
 
 
@@ -87,10 +119,9 @@ def goOverworld(player):
 	global screen
 	fullscreen = False
 
-	#playerTileList = parseImage("data/sprMutant1Walk_strip4.png", (0,0), (24,24), 0, -1, 1)
-	#weaponTileList = parseImage("data/sprBanditGun.png", (0,0), (24,8), 0, -1, 1)
-	#projectileTileList = parseImage("data/sprBullet1_strip2.png", (0,0), (16,16), 0, -1, 1)
-	#level = Level("data/level1.txt", screen, Person(playerTileList, (0,0), 3, [Weapon(weaponTileList,(0,0),Projectile(projectileTileList,1,2),1.5)]))
+	expBar = parseImage(gameConfig["EXP_BAR"][0], (0,0), (int(gameConfig["EXP_BAR"][1]),int(gameConfig["EXP_BAR"][2])), 0, -1, 1)
+	healthBar = parseImage(gameConfig["HEALTH_BAR"][0], (0,0), (int(gameConfig["HEALTH_BAR"][1]),int(gameConfig["HEALTH_BAR"][2])), 0, -1, 1)
+
 	difficulty = 1
 	level = Level(gameConfig["LEVEL_ROTATION"][0], screen, Person(player, (0,0)), difficulty)
 	multiplier = 1
@@ -107,6 +138,8 @@ def goOverworld(player):
 
 		level.update(mousePos)
 		level.draw()
+		drawHUD(level, expBar, healthBar)
+		pygame.display.flip()
 
 		stop = not level.player.alive
 
@@ -119,7 +152,7 @@ def goOverworld(player):
 			if difficulty == 10:
 				goMessageScreen(" ".join(gameConfig["WIN_MESSAGE"]), -1)
 				achievedWin = True
-			level = Level(gameConfig["LEVEL_ROTATION"][currentLevel], screen, Person(player, (0,0)), difficulty)
+			level = Level(gameConfig["LEVEL_ROTATION"][currentLevel], screen, level.player, difficulty)
 
 		level.player.go( movingPos )
 
@@ -146,6 +179,10 @@ def goOverworld(player):
 					level.player.pickupWeapon()
 				elif userInput == "space":
 					level.player.cycleWeapons()
+				elif userInput == "q":
+					level = Level(gameConfig["LEVEL_ROTATION"][currentLevel], screen, level.player, 19)
+				elif userInput == "r":
+					level.player.exp += 1
 				elif userInput == "f":
 					fullscreen = False if fullscreen else True
 					if fullscreen:
@@ -179,7 +216,7 @@ def goOverworld(player):
 			elif event.type == QUIT:
 				stop = True
 
-		pygame.time.wait(15)
+		clock.tick(60)
 
 	if achievedWin:
 		goMessageScreen(" ".join(gameConfig["WIN_DEATH_MESSAGE"]), -1)
