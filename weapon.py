@@ -3,6 +3,8 @@ import projectile
 import random
 from imageAndMapUtil import *
 
+#Weapons are both used when held by persons and just sitting in the level, waiting to be picked up.
+#Since weapons to be constructed with owners, the owner when just in the level is the level by convention.
 class Weapon:
 	def __init__(self, weaponFile, position, owner):
 
@@ -26,7 +28,7 @@ class Weapon:
 		self.angle = 0
 
 		projectilePath = weaponFileDirectory + os.sep + self.config["PROJECTILE"]
-		self.projectile = projectile.Projectile(projectilePath, owner)
+		self.projectile = projectile.Projectile(projectilePath, self.position, owner)
 		self.projectileSpeed = float(self.config["PROJECTILE_SPEED"])
 
 		self.recoil = int(self.config.get("RECOIL", 0))
@@ -36,7 +38,7 @@ class Weapon:
 		newSelf = copy.copy(self)
 		newSelf.projectile = self.projectile.clone()
 		#Comment this next line out to create a fun bug.
-		#The owner will never not be the enemyArchtype, meaning
+		#The owner will always be the enemyArchtype, meaning
 		#all enemies when in range of player will shoot themselves
 		#and die, making you like Death himself.
 		newSelf.setOwner(owner)
@@ -68,6 +70,14 @@ class Weapon:
 			self.level.addObject(newProjectile)
 
 		self.level.addRecoil(self.recoil, self.angle)
+
+	#This function is used when the weapon is in the level, but not picked up. Just sitting there.
+	def update(self, mousePos):
+		pass
+		
+	#projectiles don't matter
+	def collideWithProjectile(self, projectile, level):
+		return(False)
 
 	def draw(self, level):
 

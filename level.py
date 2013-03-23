@@ -4,6 +4,9 @@ import pygame
 import copy
 import math
 import enemy
+import projectile
+import weapon
+import container
 from imageAndMapUtil import *
 
 class Level:
@@ -56,6 +59,7 @@ class Level:
 		print("Level " + str(self.difficulity) + "!")
 
 		self.spawnEnemies()
+		self.spawnContainers()
 
 	def spawnEnemies(self):
 		#If the list at 0 is a list, i.e. we have multiple enemy tags, do for each one.
@@ -81,7 +85,38 @@ class Level:
 				newEnemy.setLevel(self)
 				self.addObject(newEnemy)
 				self.numEnemies += 1
-		print("Done generating", self.numEnemies, "enemies!")
+
+	def spawnContainers(self):
+		#If there are no containers
+		if self.levelData.get("AMMO_CONTAINER", 0) != 0:
+			self.spawnTypedContainers(self.levelData["AMMO_CONTAINER"], projectile.Projectile)
+
+		if self.levelData.get("WEAPON_CONTAINER", 0) != 0:
+			self.spawnTypedContainers(self.levelData["WEAPON_CONTAINER"], weapon.Weapon)
+		print("Done generating containers!")
+
+	#This function spawns a certain type of container, passed in as the data and the constructor for that type of contents
+	def spawnTypedContainers(self, containerData, contentsConstructor):
+		#If the list at 0 is a list, i.e. we have multiple container tags, do for each one.
+		#b/c we can have one or multiple container tags (which is itself a list),
+		#we don't know if the list is going
+		#to be singlely or doublely nested.
+		if (isinstance(containerData[0], list)):
+			containerTagList = containerData
+		else:
+			containerTagList = [containerData]
+		for containerTag in containerTagList:
+			print(containerTag)
+			containerFileDir = self.levelFileDirectory + os.sep + containerTag[0]
+			containerChance = int(containerTag[2])
+			if random.randrange(0, containerChance) == 0:
+				newPos = (random.randrange(0, self.size[0]), random.randrange(0, self.size[1]))
+				while (self.checkGround(newPos)):
+					newPos = (random.randint(0, self.size[0]), random.randint(0, self.size[1]))
+				newContainer = container.Container(containerFileDir, newPos, self.levelFileDirectory + os.sep + containerTag[1], contentsConstructor)
+				self.addObject(newContainer)
+
+
 	def generatePath(self, position, length, width):
 		direction = [0,0]
 		direction[random.choice((0,1))] = random.choice([-1,1])

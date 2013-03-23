@@ -4,7 +4,7 @@ import person
 from imageAndMapUtil import *
 
 class Projectile:
-	def __init__(self, projectileFile, owner):
+	def __init__(self, projectileFile, position, owner):
 
 		self.config = loadConfigFile(projectileFile)
 
@@ -15,7 +15,7 @@ class Projectile:
 		self.size = int(self.config["SIZE"])
 		self.damage = int(self.config["DAMAGE"])
 
-		self.position = (0,0)
+		self.position = position
 		self.velocity = (0,0)
 		self.knockback = 0
 		self.angle = 0

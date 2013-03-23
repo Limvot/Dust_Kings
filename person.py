@@ -77,6 +77,19 @@ class Person:
 		self.go( ((self.position[0]-projectile.position[0])*projectile.knockback,(self.position[1]-projectile.position[1])*projectile.knockback) )
 		self.hurtFrame = len(self.hurtTiles)
 
+	def pickupWeapon(self):
+		#none excluded, so pass in self as convention
+		print("Colliding with", self.level.checkCollision(self, 1, self))
+		for collidee in self.level.checkCollision(self, 1, self):
+			if isinstance(collidee, weapon.Weapon):
+				print("Adding weapon to weapons")
+				self.level.remove(collidee)
+				self.weapons.append(collidee)
+				collidee.setOwner(self)
+				collidee.setLevel(self.level)
+		#print(self.weapons)
+		print(len(self.weapons))
+
 
 	def die(self):
 		print("Person Died!")
@@ -84,7 +97,7 @@ class Person:
 	def fireWeapon(self):
 		self.weapons[0].fire()
 
-	def cycleWepons(self):
+	def cycleWeapons(self):
 		newFirst = self.weapons.pop()
 		self.weapons.insert(0, newFirst)
 

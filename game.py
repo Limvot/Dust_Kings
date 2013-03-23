@@ -142,6 +142,10 @@ def goOverworld(player):
 					multiplier += 1
 				elif userInput == "x":
 					multiplier -= 1
+				elif userInput == "e":
+					level.player.pickupWeapon()
+				elif userInput == "space":
+					level.player.cycleWeapons()
 				elif userInput == "f":
 					fullscreen = False if fullscreen else True
 					if fullscreen:
