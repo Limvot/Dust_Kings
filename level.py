@@ -7,6 +7,7 @@ import enemy
 import projectile
 import weapon
 import container
+import pickup
 from imageAndMapUtil import *
 
 class Level:
@@ -91,8 +92,8 @@ class Level:
 
 	def spawnContainers(self):
 		#If there are no containers
-		if self.levelData.get("AMMO_CONTAINER", 0) != 0:
-			self.spawnTypedContainers(self.levelData["AMMO_CONTAINER"], projectile.Projectile)
+		if self.levelData.get("PICKUP_CONTAINER", 0) != 0:
+			self.spawnTypedContainers(self.levelData["PICKUP_CONTAINER"], pickup.Pickup)
 
 		if self.levelData.get("WEAPON_CONTAINER", 0) != 0:
 			self.spawnTypedContainers(self.levelData["WEAPON_CONTAINER"], weapon.Weapon)

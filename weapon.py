@@ -32,7 +32,8 @@ class Weapon:
 		self.projectile = projectile.Projectile(projectilePath, self.position, owner)
 		self.projectileSpeed = float(self.config["PROJECTILE_SPEED"])
 
-		self.ammoType = projectilePath.split("/")[-1]
+		#Ammo type is just the file name without path or extension
+		self.ammoType = projectilePath.split("/")[-1].split(".")[-2]
 
 		if isinstance(self.owner, person.Person):
 			self.owner.addAmmo(self.ammoType, int(self.config.get("AMMO_NUM", -1)))

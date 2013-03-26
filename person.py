@@ -96,6 +96,11 @@ class Person:
 		#print(self.weapons)
 		print(len(self.weapons))
 
+	def addHealth(self, numToAdd):
+		self.health += numToAdd
+		if self.health > self.maxHealth:
+			self.health = self.maxHealth
+
 	def addAmmo(self, projectileType, numToAdd):
 		if numToAdd == -1:
 			self.ammo[projectileType] = -1
@@ -111,8 +116,6 @@ class Person:
 			return(True)
 		else:
 			return(False)
-
-
 
 	def die(self):
 		print("Person Died!")
