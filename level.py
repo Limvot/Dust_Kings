@@ -19,7 +19,10 @@ class Level:
 		wallTilesPath = self.levelFileDirectory + os.sep + self.levelData["WALL_TILES"]
 
 		self.wallTiles = parseImage(wallTilesPath, (0,0), self.tileSize, 0, -1, 1)
+		self.wallTiles = self.distribute(self.wallTiles)
 		self.floorTiles = parseImage(floorTilesPath, (0,0), self.tileSize,0, -1, 1)
+		self.floorTiles = self.distribute(self.floorTiles)
+
 		outOfBoundsStringList = self.levelData["OUT_OF_BOUNDS_COLOR"]
 		self.outOfBoundsTile = pygame.Surface(self.tileSize)
 		self.outOfBoundsTile.fill( (int(outOfBoundsStringList[0]),int(outOfBoundsStringList[1]),int(outOfBoundsStringList[2])) )
@@ -166,6 +169,12 @@ class Level:
 		self.generatePath(position, self.size[0]*self.size[1]//12, self.pathWidth)
 
 		self.mapSurface = self.drawMap(self.mapDict, self.tileSize, self.size, self.sectionPos, self.wallTiles[0])
+
+	def distribute(self, thingList):
+		for i in range(len(thingList)):
+			for j in range(i):
+				thingList = thingList + [thingList[i]]
+		return(thingList)
 
 	def setScreen(self, screen):
 		self.screen = screen

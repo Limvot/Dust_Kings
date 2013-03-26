@@ -15,6 +15,8 @@ class Projectile:
 		self.size = int(self.config["SIZE"])
 		self.damage = int(self.config["DAMAGE"])
 
+		self.lifetime = int(self.config.get("LIFETIME", 0))
+
 		self.position = position
 		self.velocity = (0,0)
 		self.knockback = 0
@@ -27,7 +29,7 @@ class Projectile:
 		return(copy.copy(self))
 
 	def fire(self, position, angle, speed, knockback):
-		self.firstFrame = True
+		self.framesLived = 0
 		self.position = position
 		self.angle = angle
 		self.knockback = knockback
@@ -37,6 +39,9 @@ class Projectile:
 		self.framesLived +=1
 		self.position = (self.position[0]+self.velocity[0], self.position[1]+self.velocity[1])
 		self.collide(level)
+
+		if self.lifetime != 0 and self.lifetime < self.framesLived:
+			level.remove(self)
 
 	def collide(self, level):
 		if not level.checkInBounds(self):
@@ -62,10 +67,11 @@ class Projectile:
 		return(False)
 
 	def draw(self, level):
-		if self.framesLived < 2 or len(self.tileList) == 1:
-			index = 0
+		if self.framesLived > len(self.tileList):
+			index = len(self.tileList)-1
 		else:
-			index = 1
+			index = self.framesLived-1
+
 		if abs(self.angle) > math.pi/2:
 			flipSprite = True
 			angle = (self.angle-math.pi)*180/math.pi
@@ -74,6 +80,9 @@ class Projectile:
 			angle = -self.angle*180/math.pi
 		sprite = pygame.transform.rotate(self.tileList[index], angle)
 		sprite = pygame.transform.flip(sprite, flipSprite, False)
-		level.screen.blit(sprite, level.getScreenPosition(self.position))
+		#Draw so that position is center of object
+		levelPos = level.getScreenPosition(self.position)
+		drawPos = levelPos[0]-sprite.get_width()//2,levelPos[1]-sprite.get_height()//2
+		level.screen.blit(sprite, drawPos)
 
 

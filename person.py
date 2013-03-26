@@ -15,7 +15,6 @@ class Person:
 		self.config = loadConfigFile(characterFile)
 
 		self.tileEnd = (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"]))
-		self.tileOffset = (int(self.config["TILE_OFFSET_X"]),int(self.config["TILE_OFFSET_Y"]))
 
 		characterFileDirectory = justDir(characterFile)
 
@@ -178,9 +177,10 @@ class Person:
 
 	#This function draws the character.
 	def draw(self, level):
-		#print(level.getScreenPosition(self.position))
 		screenPosition = level.getScreenPosition(self.position)
-		drawPosition =  screenPosition[0] + self.tileOffset[0], screenPosition[1] + self.tileOffset[1] #Probally negative
-		level.screen.blit(self.getCurrentSprite(), drawPosition)
+		sprite = self.getCurrentSprite()
+		#Draw so position is the center of the sprite
+		drawPosition =  screenPosition[0] - sprite.get_width()//2, screenPosition[1] - sprite.get_height()//2
+		level.screen.blit(sprite, drawPosition)
 		self.weapons[0].draw(level)
 

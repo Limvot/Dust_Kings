@@ -92,5 +92,9 @@ class Weapon:
 		if self.tileList != 0:
 			sprite = pygame.transform.rotate(self.tileList[0], angle)
 			sprite = pygame.transform.flip(sprite, flipSprite, False)
-			level.screen.blit(sprite, level.getScreenPosition(self.position))
+			
+			#Draw so that position is center of object
+			levelPos = level.getScreenPosition(self.position)
+			drawPos = levelPos[0]-sprite.get_width()//2,levelPos[1]-sprite.get_height()//2
+			level.screen.blit(sprite, drawPos)
 

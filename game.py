@@ -15,47 +15,63 @@ mousePos = (0,0)
 loadTileSize = (16,16)
 tileSize = (loadTileSize[0]*2,loadTileSize[1]*2)	#Maps are stored at half res, have to be scaled up
 
-frameDelay = 20
+gameConfig = loadConfigFile("game.txt")
 
-#We have a big screen
-screenSizeMultipler = 1
-screenSize = (320*screenSizeMultipler,240*screenSizeMultipler)
+screenSizeTag = gameConfig.get("SCREEN_SIZE", (320,240))
+screenSize = int(screenSizeTag[0]), int(screenSizeTag[1])
+screenSizeMultiplier = int(gameConfig.get("DRAW_MULTIPLIER", 2))
+trueScreenSize = screenSize[0]*screenSizeMultiplier, screenSize[1]*screenSizeMultiplier
 sectionSize = ( (screenSize[0]//tileSize[0]+1), (screenSize[1]//tileSize[1]+1) )	#Adjust the tile section size to the screen size, so that it covers the entire screen
 
-gameConfig = loadConfigFile("game.txt")
 GAME_NAME = " ".join(gameConfig["GAME_NAME"])
 pygame.display.set_caption(GAME_NAME)
 
-screen = pygame.display.set_mode( screenSize )
+FONT_FILE = gameConfig["FONT"]
+FONT_SIZE = int(gameConfig["FONT_SIZE"])
+FONT_TITLE_SIZE = int(gameConfig["FONT_TITLE_SIZE"])
+FONT_HUD_SIZE = int(gameConfig["FONT_HUD_SIZE"])
+
+windowScreen = pygame.display.set_mode( (screenSize[0]*screenSizeMultiplier,screenSize[1]*screenSizeMultiplier) )
+screen = pygame.Surface( screenSize )
 background = pygame.Surface(screen.get_size())
 background.fill( (100,100,100) )
-background.blit(load_image(gameConfig["TITLE_SCREEN"])[0], (0,0))
-screen.blit(background, (0,0))
-pygame.display.flip()
 
-getKey(-1)
+drawCustomMouse = False
+if gameConfig.get("MOUSE", 0) != 0:
+	pygame.mouse.set_visible(False)
+	mouseCursor = load_image(gameConfig["MOUSE"])[0]
+	drawCustomMouse = True
 
-#Wait for input
-background.blit(load_image(gameConfig["MENU_BACKGROUND"])[0], (0,0))
 
+def drawToWindow(screen):
+	windowScreen.blit(pygame.transform.scale(screen, (screenSize[0]*screenSizeMultiplier,screenSize[1]*screenSizeMultiplier) ), (0,0))
+	pygame.display.flip()
+
+def goTitleScreen():
+	background.blit(load_image(gameConfig["TITLE_SCREEN"])[0], (0,0))
+	screen.blit(background, (0,0))
+	drawToWindow(screen)
+	getKey(-1)
+	goMenu()
 
 def goMenu():
+	background.blit(load_image(gameConfig["MENU_BACKGROUND"])[0], (0,0))
 	screen.blit(background, (0,0))		#Draw our background
 
 	if pygame.font:					#Only if fonts are enabled
 		textOffset = screen.get_size()[1]//(len(gameConfig["CHARACTERS"])+2)
-		font = pygame.font.Font(None, 48)										#Font size
+		font = pygame.font.Font(FONT_FILE, FONT_TITLE_SIZE)										#Font size
 		text = font.render(GAME_NAME, 1, (10, 10, 10))							#Font message
 		textpos = text.get_rect(centerx=screen.get_width()//2)					#Center of screen
 		screen.blit(text, textpos)												#Draw
 
-		font = pygame.font.Font(None, 28)										#Font size
+		font = pygame.font.Font(FONT_FILE, FONT_SIZE)										#Font size
 		text = font.render("Choose a character", 1, (10, 10, 10))
 		textpos = text.get_rect(centerx=screen.get_width()//3)
 		
 		screen.blit(text, (textpos[0], textpos[1]+textOffset))
 		
-		font = pygame.font.Font(None, 24)
+		font = pygame.font.Font(FONT_FILE, FONT_SIZE)
 		for i in range(len(gameConfig["CHARACTERS"])):
 			charOption = "("+str(i)+") " + gameConfig["CHARACTERS"][i].split("/")[-1].split(".")[0] #Use the name of the file minus the extension and the path
 			text = font.render(charOption, 1, (10, 10, 10))
@@ -63,22 +79,29 @@ def goMenu():
 			screen.blit(text, (textpos[0], textOffset*(i+2)))
 
 
-	pygame.display.flip()			#Flip our display
+	drawToWindow(screen)
 
 
 	goOverworld(gameConfig["CHARACTERS"][int(getKey(-1))])
 
-def goMessageScreen(message, keyWait):
+def goMessageScreen(messages, keyWait):
 	screen.blit(background, (0,0))		#Draw our background
 
-	if pygame.font:					#Only if fonts are enabled										#Draw
-		font = pygame.font.Font(None, 38)										#Font size
-		text = font.render(message, 1, (10, 10, 10))
-		textpos = text.get_rect(centerx=screen.get_width()//2)
-		
-		screen.blit(text, (textpos[0], textpos[1]))
+	offset = 0
 
-	pygame.display.flip()			#Flip our display
+	#Allow both lists and single strings
+	if not isinstance(messages, list):
+		messages = [messages] 
+
+	if pygame.font:					#Only if fonts are enabled
+		font = pygame.font.Font(FONT_FILE, FONT_SIZE)
+		for message in messages:
+			text = font.render(message, 1, (10, 10, 10))
+			textpos = text.get_rect(centerx=screen.get_width()//2, centery=screen.get_height()//3 + offset)
+			offset += text.get_height()
+			screen.blit(text, (textpos[0], textpos[1]))
+
+	drawToWindow(screen)
 	getKey(keyWait)
 
 def drawHUD(level, expBar, healthBar):
@@ -91,7 +114,7 @@ def drawHUD(level, expBar, healthBar):
 	healthBarSize = healthBar[0].get_size()
 
 	if pygame.font:					#Only if fonts are enabled										#Draw
-		font = pygame.font.Font(None, 18)
+		font = pygame.font.Font(FONT_FILE, FONT_HUD_SIZE)
 
 		expPct = int(exp/level.player.expPerLevel * (len(expBar)-1))
 		screen.blit(expBar[expPct], (0,0) )
@@ -112,6 +135,9 @@ def drawHUD(level, expBar, healthBar):
 		if playerWeapon.tileList != 0:
 			screen.blit(playerWeapon.tileList[0], (expBarSize[0]+BUFFER, i*BUFFER+expBarSize[1]))
 		i += 1
+
+def drawMouse(mousePos):
+	screen.blit(mouseCursor, (mousePos[0]-mouseCursor.get_width()//2, mousePos[1]-mouseCursor.get_height()//2 ))
 			
 
 
@@ -126,20 +152,22 @@ def goOverworld(player):
 	level = Level(gameConfig["LEVEL_ROTATION"][0], screen, Person(player, (0,0)), difficulty)
 	multiplier = 1
 
-
 	mousePos = (0,0)
 	movingPos = (0,0)
 
 	currentLevel = 0
 	achievedWin = False
 
+	goMessageScreen(["Level " + str(currentLevel+1) + "_" + str(difficulty), "Get ready!"], -1)
+
 	stop = False
 	while stop == False:		#Go until we quit
-
 		level.update(mousePos)
 		level.draw()
 		drawHUD(level, expBar, healthBar)
-		pygame.display.flip()
+		if drawCustomMouse:
+			drawMouse(mousePos)
+		drawToWindow(screen)
 
 		stop = not level.player.alive
 
@@ -152,30 +180,29 @@ def goOverworld(player):
 			if difficulty == 10:
 				goMessageScreen(" ".join(gameConfig["WIN_MESSAGE"]), -1)
 				achievedWin = True
+			goMessageScreen(["Level " + str(currentLevel+1) + "_" + str(difficulty), "Get ready!"], -1)
 			level = Level(gameConfig["LEVEL_ROTATION"][currentLevel], screen, level.player, difficulty)
 
 		level.player.go( movingPos )
 
 		stop = not level.player.alive
+		#Get the keyboard for movement, stuff that is always happens when key is pressed
+		movingPos = [0,0]
+		keyboardPressed = pygame.key.get_pressed()
+		if keyboardPressed[pygame.K_LEFT] or keyboardPressed[pygame.K_a]:
+			movingPos = movingPos[0] - 1, movingPos[1]
+		if keyboardPressed[pygame.K_RIGHT] or keyboardPressed[pygame.K_d]:
+			movingPos = movingPos[0] + 1, movingPos[1] 
+		if keyboardPressed[pygame.K_UP] or keyboardPressed[pygame.K_w]:
+			movingPos = movingPos[0], movingPos[1] - 1
+		if keyboardPressed[pygame.K_DOWN] or keyboardPressed[pygame.K_s]:
+			movingPos = movingPos[0], movingPos[1] + 1
 
+		#Get the mouse and keyboard things that happen once per event
 		for event in pygame.event.get():
 			if event.type == KEYDOWN:
 				userInput = pygame.key.name(event.key)
-				if userInput == "left" or userInput == "a":
-					movingPos = movingPos[0] - 1, movingPos[1]
-				elif userInput == "right" or userInput == "d":
-					movingPos = movingPos[0] + 1, movingPos[1] 
-				elif userInput == "up" or userInput == "w":
-					movingPos = movingPos[0], movingPos[1] - 1
-				elif userInput == "down" or userInput == "s":
-					movingPos = movingPos[0], movingPos[1] + 1
-				elif userInput == "x":
-					multiplier -= 1
-				elif userInput == "z":
-					multiplier += 1
-				elif userInput == "x":
-					multiplier -= 1
-				elif userInput == "e":
+				if userInput == "e":
 					level.player.pickupWeapon()
 				elif userInput == "space":
 					level.player.cycleWeapons()
@@ -186,26 +213,14 @@ def goOverworld(player):
 				elif userInput == "f":
 					fullscreen = False if fullscreen else True
 					if fullscreen:
-						screen = pygame.display.set_mode(screenSize, pygame.FULLSCREEN)
+						windowScreen = pygame.display.set_mode( (screenSize[0]*screenSizeMultiplier,screenSize[1]*screenSizeMultiplier), pygame.FULLSCREEN )
 					else:
-						screen = pygame.display.set_mode(screenSize)
-					level.setScreen(screen)
+						windowScreen = pygame.display.set_mode( (screenSize[0]*screenSizeMultiplier,screenSize[1]*screenSizeMultiplier) )
 				elif userInput == "escape":
 					stop = True
-
-			elif event.type == KEYUP:
-				userInput = pygame.key.name(event.key)
-				if userInput == "left" or userInput == "a":
-					movingPos = movingPos[0] + 1, movingPos[1]
-				elif userInput == "right" or userInput == "d":
-					movingPos = movingPos[0] - 1, movingPos[1]
-				elif userInput == "up" or userInput == "w":
-					movingPos = movingPos[0], movingPos[1] + 1
-				elif userInput == "down" or userInput == "s":
-					movingPos = movingPos[0], movingPos[1] - 1
-
-			elif event.type == MOUSEMOTION:
-				mousePos = event.pos
+			if event.type == MOUSEMOTION:
+				#Make mouse coords equal to the screen coords
+				mousePos = event.pos[0]//screenSizeMultiplier,event.pos[1]//screenSizeMultiplier
 			elif event.type == MOUSEBUTTONDOWN:
 				if event.button == 1:
 					level.player.fireWeapon()
@@ -223,4 +238,4 @@ def goOverworld(player):
 	else:
 		goMessageScreen(" ".join(gameConfig["DEATH_MESSAGE"]), -1)
 
-goMenu() #Run our menu to start
+goTitleScreen() #Run our menu to start

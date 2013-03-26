@@ -66,6 +66,10 @@ class Container:
 		return(tileList[self.whichStep//self.framesPerSprite])
 
 	def draw(self, level):
-		level.screen.blit(self.getCurrentSprite(), level.getScreenPosition(self.position))
+		#Draw so that position is center of object
+		sprite = self.getCurrentSprite()
+		levelPos = level.getScreenPosition(self.position)
+		drawPos = levelPos[0]-sprite.get_width()//2,levelPos[1]-sprite.get_height()//2
+		level.screen.blit(sprite, drawPos)
 
 
