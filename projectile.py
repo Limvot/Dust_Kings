@@ -34,6 +34,11 @@ class Projectile:
 	def clone(self):
 		return(copy.copy(self))
 
+	def setOwner(self, owner):
+		self.owner = owner
+		if self.onDeath != 0:
+			self.onDeath.setOwner(owner)
+
 	def fire(self, position, angle, speed, knockback):
 		newProjectile = self.clone()
 		newProjectile.framesLived = 0

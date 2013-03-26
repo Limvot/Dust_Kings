@@ -56,7 +56,7 @@ class Weapon:
 
 	def setOwner(self, owner):
 		self.owner = owner
-		self.projectile.owner = owner
+		self.projectile.setOwner(owner)
 		if isinstance(self.owner, person.Person):
 			self.owner.addAmmo(self.ammoType, int(self.config.get("AMMO_NUM", -1)))
 
