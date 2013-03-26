@@ -116,20 +116,32 @@ def drawHUD(level, expBar, healthBar):
 	if pygame.font:					#Only if fonts are enabled										#Draw
 		font = pygame.font.Font(FONT_FILE, FONT_HUD_SIZE)
 
+		#Experience
 		expPct = int(exp/level.player.expPerLevel * (len(expBar)-1))
 		screen.blit(expBar[expPct], (0,0) )
 		text = font.render(str(exp), 1, (10, 10, 10))
 		expBlitPos = expBarSize[0]//2 - text.get_width()//2, expBarSize[1] + BUFFER
 		screen.blit(text, expBlitPos)
 
+		#Health
 		healthPct = (len(healthBar)-1)-int(level.player.health/level.player.maxHealth * (len(healthBar)-1))
 		screen.blit(healthBar[healthPct], (expBarSize[0]+BUFFER,0) )
 		text = font.render(healthStr, 1, (10, 10, 10))
 		healthBlitPos = healthBarSize[0]//2 - text.get_width()//2, healthBarSize[1]//2 - text.get_height()//2
 		healthBlitPos = healthBlitPos[0]+expBarSize[0]+BUFFER, healthBlitPos[1]
 		screen.blit(text, healthBlitPos )
+
+		#Ammo
+		ammoBlitPos = healthBlitPos[0] + BUFFER, healthBlitPos[1] + BUFFER
+		for ammoType in level.player.ammo.items():
+			text = font.render(ammoType[0] + "-"+str(ammoType[1]), 1, (10, 10, 10))
+			ammoBlitPos = ammoBlitPos[0], ammoBlitPos[1] + text.get_height()
+			screen.blit(text, ammoBlitPos )
+
 	else:
 		print(expStr, HUDString)
+
+	#Weapons
 	i = 0
 	for playerWeapon in level.player.weapons:
 		if playerWeapon.tileList != 0:

@@ -29,6 +29,9 @@ class Person:
 
 		deadTilePath = characterFileDirectory + os.sep + self.config["DEAD"]
 		self.deadTiles = parseImage(deadTilePath, (0,0), self.tileEnd, 0, -1, 1)
+
+		#ammo is a dictionary that maps an ammo type to a number.
+		self.ammo = {}
 		
 		defaultWeaponPath = characterFileDirectory + os.sep + self.config["DEFAULT_WEAPON"]
 		self.weapons = [weapon.Weapon(defaultWeaponPath, self.position, self)]
@@ -72,8 +75,6 @@ class Person:
 			return()
 
 		self.health -= projectile.damage
-		#print(self, "Hit by projectile", projectile, "with owner", projectile.owner)
-		#print(self.health)
 		if self.health <= 0:
 			self.alive = False
 			self.deadFrame = len(self.deadTiles)
@@ -94,6 +95,23 @@ class Person:
 				collidee.setLevel(self.level)
 		#print(self.weapons)
 		print(len(self.weapons))
+
+	def addAmmo(self, projectileType, numToAdd):
+		if numToAdd == -1:
+			self.ammo[projectileType] = -1
+		else:
+			self.ammo[projectileType] = self.ammo.get(projectileType, 0) + numToAdd
+
+	#Returns true if use suceeded, false if not enough
+	def useAmmo(self, projectileType, numToUse):
+		if self.ammo[projectileType] == -1:
+			return(True)
+		elif self.ammo[projectileType] - numToUse >= 0:
+			self.ammo[projectileType] -= numToUse
+			return(True)
+		else:
+			return(False)
+
 
 
 	def die(self):

@@ -1,6 +1,7 @@
 import math
 import copy
 import person
+import os
 from imageAndMapUtil import *
 
 class Projectile:
@@ -23,17 +24,31 @@ class Projectile:
 		self.angle = 0
 		self.framesLived = 0
 
+		#If we create another projectile when we die, set it up
+		self.onDeath = self.config.get("ON_DEATH", 0)
+		if self.onDeath != 0:
+			self.onDeath = Projectile(projectileFileDirectory + os.sep + self.onDeath, self.position, owner)
+
 		self.owner = owner
 
 	def clone(self):
 		return(copy.copy(self))
 
 	def fire(self, position, angle, speed, knockback):
-		self.framesLived = 0
-		self.position = position
-		self.angle = angle
-		self.knockback = knockback
-		self.velocity = (math.cos(angle)*speed, math.sin(angle)*speed)
+		newProjectile = self.clone()
+		newProjectile.framesLived = 0
+		newProjectile.position = position
+		newProjectile.angle = angle
+		newProjectile.knockback = knockback
+		newProjectile.speed = speed
+		newProjectile.velocity = (math.cos(angle)*speed, math.sin(angle)*speed)
+		return(newProjectile)
+
+	def die(self, level):
+		if self.onDeath != 0:
+			self.onDeath.fire(self.position, self.angle, self.speed, self.knockback)
+			level.addObject(self.onDeath.fire(self.position, self.angle, self.speed, self.knockback))
+		level.remove(self)
 
 	def update(self, level):
 		self.framesLived +=1
@@ -41,11 +56,11 @@ class Projectile:
 		self.collide(level)
 
 		if self.lifetime != 0 and self.lifetime < self.framesLived:
-			level.remove(self)
+			self.die(level)
 
 	def collide(self, level):
 		if not level.checkInBounds(self):
-			level.remove(self)
+			self.die(level)
 			return()
 		for collidee in level.checkCollision(self, self.size, self.owner):
 			collidee.collideWithProjectile(self, level)
@@ -54,15 +69,15 @@ class Projectile:
 			#Only collide with alive entities, dead ones don't matter.
 			elif isinstance(collidee, person.Person):
 				if collidee.alive:
-					level.remove(self)
+					self.die(level)
 					return()
 
 		if level.checkGround(self.position):
-			level.remove(self)
+			self.die(level)
 
 	def collideWithProjectile(self, projectile, level):
 		if projectile.owner != self.owner:
-			level.remove(self)
+			self.die(level)
 			return(True)
 		return(False)
 

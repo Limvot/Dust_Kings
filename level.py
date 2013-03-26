@@ -221,7 +221,7 @@ class Level:
 			print("Player Dead!!!")
 
 	def getScreenPosition(self, position):
-		return ( self.tileSize[0]*(position[0]-self.sectionPos[0]) + self.sectionPixelOffset[0], self.tileSize[1]*(position[1]-self.sectionPos[1]) + self.sectionPixelOffset[1] )
+		return ( self.tileSize[0]*(position[0]-self.sectionPos[0]) + self.sectionPixelOffset[0] + self.recoilOffset[0], self.tileSize[1]*(position[1]-self.sectionPos[1]) + self.sectionPixelOffset[1] + self.recoilOffset[1])
 
 	def addRecoil(self, recoil, recoilAngle):
 		self.recoilOffset = int(-recoil*math.cos(recoilAngle)), int(-recoil*math.sin(recoilAngle))
@@ -230,12 +230,12 @@ class Level:
 		#draw level
 		self.screen.blit(self.outOfBoundsSurface, (0,0))
 		self.screen.blit(self.mapSurface, (-self.sectionPos[0]*self.tileSize[0]+self.recoilOffset[0],-self.sectionPos[1]*self.tileSize[1]+self.recoilOffset[1]) )
-		#Notice the float division, then convert to int. This is because -1//3 is still -1, but int(-1/3) is 0.
-		self.recoilOffset = int(self.recoilOffset[0]/2),int(self.recoilOffset[1]/2)
 		#draw objects
 		for obj in self.objects:
 			obj.draw(self)
 		self.player.draw(self)
+		#Notice the float division, then convert to int. This is because -1//3 is still -1, but int(-1/3) is 0.
+		self.recoilOffset = int(self.recoilOffset[0]/2),int(self.recoilOffset[1]/2)
 
 	def drawMap(self, mapDict, tileSize, sectionSize, sectionLocation, defaultTile):
 		mapSection = pygame.Surface((tileSize[0]*sectionSize[0], tileSize[1]*sectionSize[1]))
