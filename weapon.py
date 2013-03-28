@@ -32,8 +32,13 @@ class Weapon:
 		self.projectile = projectile.Projectile(projectilePath, self.position, owner)
 		self.projectileSpeed = float(self.config["PROJECTILE_SPEED"])
 
+		#Stuff for melee
+		self.isMelee = bool(self.config.get("MELEE", False))
+		self.additionalMeleeAngle = 1
+
 		#Ammo type is just the file name without path or extension
 		self.ammoType = projectilePath.split("/")[-1].split(".")[-2]
+		self.ammoNum = int(self.config.get("AMMO_NUM", -1))
 
 		if isinstance(self.owner, person.Person):
 			self.owner.addAmmo(self.ammoType, int(self.config.get("AMMO_NUM", -1)))
@@ -58,8 +63,6 @@ class Weapon:
 	def setOwner(self, owner):
 		self.owner = owner
 		self.projectile.setOwner(owner)
-		if isinstance(self.owner, person.Person):
-			self.owner.addAmmo(self.ammoType, int(self.config.get("AMMO_NUM", -1)))
 
 	def setLevel(self, level):
 		self.level = level
@@ -71,6 +74,8 @@ class Weapon:
 		self.angle = angle
 
 	def fire(self):
+		if self.isMelee:
+			self.additionalMeleeAngle = -self.additionalMeleeAngle
 		#If our owner has enough ammo, copy our standard projectile and fire it, then add it to the level
 		if self.owner.useAmmo(self.ammoType, self.numProjectilesToFire):
 			for i in range(self.numProjectilesToFire):
@@ -100,6 +105,9 @@ class Weapon:
 			flipSprite = False
 			angle = -self.angle*180/math.pi
 
+		if self.isMelee:
+			angle += self.additionalMeleeAngle*180/math.pi
+
 		#if we have a tile
 		if self.tileList != 0:
 			sprite = pygame.transform.rotate(self.tileList[0], angle)
@@ -108,6 +116,7 @@ class Weapon:
 			#Draw so that position is center of object
 			levelPos = level.getScreenPosition(self.position)
 			drawPos = levelPos[0]-sprite.get_width()//2,levelPos[1]-sprite.get_height()//2
+
 			level.screen.blit(sprite, drawPos)
 		if self.sight != 0:
 			drawLength = level.size[0]*level.tileSize[0]+level.size[1]*level.tileSize[1]

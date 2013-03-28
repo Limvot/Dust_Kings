@@ -85,14 +85,14 @@ class Person:
 
 	def pickupWeapon(self):
 		#none excluded, so pass in self as convention
-		print("Colliding with", self.level.checkCollision(self, 1, self))
 		for collidee in self.level.checkCollision(self, 1, self):
 			if isinstance(collidee, weapon.Weapon):
-				print("Adding weapon to weapons")
 				self.level.remove(collidee)
-				self.weapons.append(collidee)
-				collidee.setOwner(self)
-				collidee.setLevel(self.level)
+				self.addAmmo(collidee.ammoType, collidee.ammoNum)
+				if collidee not in self.weapons:
+					self.weapons.append(collidee)
+					collidee.setOwner(self)
+					collidee.setLevel(self.level)
 		#print(self.weapons)
 		print(len(self.weapons))
 
@@ -162,6 +162,15 @@ class Person:
 		for weapon in self.weapons:
 			weapon.setAngle(mouseAngle)
 			weapon.setPosition(self.position)
+
+		#PROTOTYPE CODE WRITTEN FOR WEAPON, MIGHT ADD LATER
+		#if self.flipSprite:
+		#	drawPos = drawPos[0]-self.owner.tileEnd[0]//2,drawPos[1]
+		#else:
+		#	drawPos = drawPos[0]+self.owner.tileEnd[0]//2,drawPos[1]
+			#correct endpoint for rotation
+			#drawPos = drawPos[0]-(self.tileList[0].get_height()//2)* math.sin(angle*math.pi/180), drawPos[1]-(self.tileList[0].get_width()//2)* math.sin(angle*math.pi/180)
+			#drawPos = drawPos[0], drawPos[1]-(self.tileList[0].get_width()//2)* math.sin(angle*math.pi/180)
 
 	#This function tells the character how far to move, starting the move
 	def go(self, posTup):

@@ -13,7 +13,7 @@ class Projectile:
 		tileListDir = projectileFileDirectory + os.sep + self.config["TILE"]
 		self.tileList = parseImage(tileListDir, (0,0), (int(self.config["TILE_END_X"]),int(self.config["TILE_END_Y"])), 0, -1, 1)
 
-		self.size = int(self.config["SIZE"])
+		self.size = float(self.config["SIZE"])
 		self.damage = int(self.config["DAMAGE"])
 
 		self.lifetime = int(self.config.get("LIFETIME", 0))

@@ -142,11 +142,13 @@ def drawHUD(level, expBar, healthBar):
 		print(expStr, HUDString)
 
 	#Weapons
-	i = 0
+	weaponDrawOffset = 0
 	for playerWeapon in level.player.weapons:
 		if playerWeapon.tileList != 0:
-			screen.blit(playerWeapon.tileList[0], (expBarSize[0]+BUFFER, i*BUFFER+expBarSize[1]))
-		i += 1
+			screen.blit(playerWeapon.tileList[0], (expBarSize[0]+BUFFER, weaponDrawOffset+expBarSize[1]))
+			weaponDrawOffset += playerWeapon.tileList[0].get_height()
+		else:
+			weaponDrawOffset += BUFFER
 
 def drawMouse(mousePos):
 	screen.blit(mouseCursor, (mousePos[0]-mouseCursor.get_width()//2, mousePos[1]-mouseCursor.get_height()//2 ))
@@ -247,7 +249,9 @@ def goOverworld(player):
 
 	if achievedWin:
 		goMessageScreen(" ".join(gameConfig["WIN_DEATH_MESSAGE"]), -1)
+		goMenu()
 	else:
 		goMessageScreen(" ".join(gameConfig["DEATH_MESSAGE"]), -1)
+		goMenu()
 
 goTitleScreen() #Run our menu to start
