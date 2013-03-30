@@ -92,7 +92,7 @@ def goMenu():
 	screen.blit(background, (0,0))		#Draw our background
 
 	if pygame.font:					#Only if fonts are enabled
-		textOffset = screen.get_size()[1]//(len(gameConfig["CHARACTERS"])+2)
+		textOffset = screen.get_size()[1]//(len(gameConfig["CHARACTERS"])+3)
 		text = titleFont.render(GAME_NAME, 1, (10, 10, 10))							#Font message
 		textpos = text.get_rect(centerx=screen.get_width()//2)					#Center of screen
 		screen.blit(text, textpos)												#Draw
@@ -102,17 +102,33 @@ def goMenu():
 		
 		screen.blit(text, (textpos[0], textpos[1]+textOffset))
 
+		text = regularFont.render("(0) Random", 1, (10, 10, 10))
+		textpos = text.get_rect(centerx=screen.get_width()//2)
+		screen.blit(text, (textpos[0], textOffset*(2)))
+
 		for i in range(len(gameConfig["CHARACTERS"])):
-			charOption = "("+str(i)+") " + gameConfig["CHARACTERS"][i].split("/")[-1].split(".")[0] #Use the name of the file minus the extension and the path
+			#0 is random, so fix off by one
+			charOption = "("+str(i+1)+") " + gameConfig["CHARACTERS"][i].split("/")[-1].split(".")[0] #Use the name of the file minus the extension and the path
 			text = regularFont.render(charOption, 1, (10, 10, 10))
 			textpos = text.get_rect(centerx=screen.get_width()//2)
-			screen.blit(text, (textpos[0], textOffset*(i+2)))
+			screen.blit(text, (textpos[0], textOffset*(i+3)))
 
 
 	drawToWindow(screen)
+	userInput = getKey(-1)
+	if userInput != "escape":
+		try:
+			charChoice = int(userInput)
+			if charChoice == 0:
+				goSingleplayer(random.choice(gameConfig["CHARACTERS"]))
+			else:
+				goSingleplayer(gameConfig["CHARACTERS"][charChoice-1])
+		except ValueError:
+			goMenu()
+		except IndexError:
+			goMenu()
 
-
-	goSingleplayer(gameConfig["CHARACTERS"][int(getKey(-1))])
+			
 
 def goMessageScreen(messages, keyWait):
 	screen.blit(background, (0,0))		#Draw our background

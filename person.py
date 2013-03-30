@@ -163,6 +163,9 @@ class Person:
 			weapon.setAngle(mouseAngle)
 			weapon.setPosition(self.position)
 
+		if self.health < 0:
+			self.health = 0
+
 		#PROTOTYPE CODE WRITTEN FOR WEAPON, MIGHT ADD LATER
 		#if self.flipSprite:
 		#	drawPos = drawPos[0]-self.owner.tileEnd[0]//2,drawPos[1]

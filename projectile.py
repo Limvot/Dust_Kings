@@ -29,6 +29,8 @@ class Projectile:
 		if self.onDeath != 0:
 			self.onDeath = Projectile(projectileFileDirectory + os.sep + self.onDeath, self.position, owner)
 
+		self.destroyOtherProjectiles = bool(self.config.get("DESTORY_OTHER_PROJECTILES", False))
+
 		self.owner = owner
 
 	def clone(self):
@@ -81,8 +83,7 @@ class Projectile:
 			self.die(level)
 
 	def collideWithProjectile(self, projectile, level):
-		if projectile.owner != self.owner:
-			self.die(level)
+		if self.destroyOtherProjectiles and projectile.owner != self.owner:
 			return(True)
 		return(False)
 
