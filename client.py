@@ -2,7 +2,11 @@
 import socket
 from select import select
 
-HOST = 'localhost'
+#Get info
+print(socket.gethostbyname(socket.gethostname()))
+
+
+HOST = input("Use what host:")
 PORT = int(input("Use what port:"))
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

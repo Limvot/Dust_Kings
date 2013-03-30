@@ -25,6 +25,7 @@ sectionSize = ( (screenSize[0]//tileSize[0]+1), (screenSize[1]//tileSize[1]+1) )
 
 GAME_NAME = " ".join(gameConfig["GAME_NAME"])
 pygame.display.set_caption(GAME_NAME)
+AUTHOR = " ".join(gameConfig["AUTHOR"])
 
 FONT_FILE = gameConfig["FONT"]
 FONT_SIZE = int(gameConfig["FONT_SIZE"])
@@ -35,6 +36,11 @@ windowScreen = pygame.display.set_mode( (screenSize[0]*screenSizeMultiplier,scre
 screen = pygame.Surface( screenSize )
 background = pygame.Surface(screen.get_size())
 background.fill( (100,100,100) )
+
+if pygame.font:					#Only if fonts are enabled										#Draw
+	HUDFont = pygame.font.Font(FONT_FILE, FONT_HUD_SIZE)
+	regularFont = pygame.font.Font(FONT_FILE, FONT_SIZE)
+	titleFont = pygame.font.Font(FONT_FILE, FONT_TITLE_SIZE)
 
 drawCustomMouse = False
 if gameConfig.get("MOUSE", 0) != 0:
@@ -50,9 +56,36 @@ def drawToWindow(screen):
 def goTitleScreen():
 	background.blit(load_image(gameConfig["TITLE_SCREEN"])[0], (0,0))
 	screen.blit(background, (0,0))
+	if pygame.font:					#Only if fonts are enabled
+		text = titleFont.render(GAME_NAME, 1, (10, 10, 10))							#Font message
+		textpos = text.get_rect(centerx=screen.get_width()//2)					#Center of screen
+		screen.blit(text, textpos)												#Draw
+
+		text = regularFont.render(" ".join(gameConfig["PLAY_MESSAGE"]), 1, (10, 10, 10))
+		textpos = text.get_rect(centerx=screen.get_width()//2)[0],screen.get_height()//3
+		screen.blit(text, textpos)
+
+		if gameConfig.get("MULTIPLAYER_MESSAGE", False):
+			text = regularFont.render(" ".join(gameConfig["MULTIPLAYER_MESSAGE"]), 1, (10, 10, 10))
+			textpos = text.get_rect(centerx=screen.get_width()//2)[0],screen.get_height()//2
+			screen.blit(text, textpos)
+
+		text = regularFont.render(AUTHOR, 1, (10, 10, 10))
+		textpos = text.get_rect(centerx=screen.get_width()//2)[0],screen.get_height()-text.get_height()
+		screen.blit(text, textpos)
+		
+		screen.blit(text, textpos)
 	drawToWindow(screen)
-	getKey(-1)
-	goMenu()
+
+	userInput = getKey(-1)
+	if userInput.upper() == "P":
+		goMenu()
+	elif gameConfig.get("MULTIPLAYER_MESSAGE", False) and userInput.upper() == "M":
+		goMultiplayer()
+	elif userInput == "escape":
+		return()
+	else:
+		goTitleScreen()
 
 def goMenu():
 	background.blit(load_image(gameConfig["MENU_BACKGROUND"])[0], (0,0))
@@ -60,21 +93,18 @@ def goMenu():
 
 	if pygame.font:					#Only if fonts are enabled
 		textOffset = screen.get_size()[1]//(len(gameConfig["CHARACTERS"])+2)
-		font = pygame.font.Font(FONT_FILE, FONT_TITLE_SIZE)										#Font size
-		text = font.render(GAME_NAME, 1, (10, 10, 10))							#Font message
+		text = titleFont.render(GAME_NAME, 1, (10, 10, 10))							#Font message
 		textpos = text.get_rect(centerx=screen.get_width()//2)					#Center of screen
 		screen.blit(text, textpos)												#Draw
 
-		font = pygame.font.Font(FONT_FILE, FONT_SIZE)										#Font size
-		text = font.render("Choose a character", 1, (10, 10, 10))
+		text = regularFont.render("Choose a character", 1, (10, 10, 10))
 		textpos = text.get_rect(centerx=screen.get_width()//3)
 		
 		screen.blit(text, (textpos[0], textpos[1]+textOffset))
-		
-		font = pygame.font.Font(FONT_FILE, FONT_SIZE)
+
 		for i in range(len(gameConfig["CHARACTERS"])):
 			charOption = "("+str(i)+") " + gameConfig["CHARACTERS"][i].split("/")[-1].split(".")[0] #Use the name of the file minus the extension and the path
-			text = font.render(charOption, 1, (10, 10, 10))
+			text = regularFont.render(charOption, 1, (10, 10, 10))
 			textpos = text.get_rect(centerx=screen.get_width()//2)
 			screen.blit(text, (textpos[0], textOffset*(i+2)))
 
@@ -82,7 +112,7 @@ def goMenu():
 	drawToWindow(screen)
 
 
-	goOverworld(gameConfig["CHARACTERS"][int(getKey(-1))])
+	goSingleplayer(gameConfig["CHARACTERS"][int(getKey(-1))])
 
 def goMessageScreen(messages, keyWait):
 	screen.blit(background, (0,0))		#Draw our background
@@ -102,7 +132,7 @@ def goMessageScreen(messages, keyWait):
 			screen.blit(text, (textpos[0], textpos[1]))
 
 	drawToWindow(screen)
-	getKey(keyWait)
+	return(getKey(keyWait))
 
 def drawHUD(level, expBar, healthBar):
 	BUFFER = 10
@@ -113,20 +143,18 @@ def drawHUD(level, expBar, healthBar):
 	expBarSize = expBar[0].get_size()
 	healthBarSize = healthBar[0].get_size()
 
-	if pygame.font:					#Only if fonts are enabled										#Draw
-		font = pygame.font.Font(FONT_FILE, FONT_HUD_SIZE)
-
+	if pygame.font:					#Only if fonts are enabled
 		#Experience
 		expPct = int(exp/level.player.expPerLevel * (len(expBar)-1))
 		screen.blit(expBar[expPct], (0,0) )
-		text = font.render(str(exp), 1, (10, 10, 10))
+		text = HUDFont.render(str(exp), 1, (10, 10, 10))
 		expBlitPos = expBarSize[0]//2 - text.get_width()//2, expBarSize[1] + BUFFER
 		screen.blit(text, expBlitPos)
 
 		#Health
 		healthPct = (len(healthBar)-1)-int(level.player.health/level.player.maxHealth * (len(healthBar)-1))
 		screen.blit(healthBar[healthPct], (expBarSize[0]+BUFFER,0) )
-		text = font.render(healthStr, 1, (10, 10, 10))
+		text = HUDFont.render(healthStr, 1, (10, 10, 10))
 		healthBlitPos = healthBarSize[0]//2 - text.get_width()//2, healthBarSize[1]//2 - text.get_height()//2
 		healthBlitPos = healthBlitPos[0]+expBarSize[0]+BUFFER, healthBlitPos[1]
 		screen.blit(text, healthBlitPos )
@@ -134,7 +162,7 @@ def drawHUD(level, expBar, healthBar):
 		#Ammo
 		ammoBlitPos = healthBlitPos[0] + BUFFER, healthBlitPos[1] + BUFFER
 		for ammoType in level.player.ammo.items():
-			text = font.render(ammoType[0] + "-"+str(ammoType[1]), 1, (10, 10, 10))
+			text = HUDFont.render(ammoType[0] + "-"+str(ammoType[1]), 1, (10, 10, 10))
 			ammoBlitPos = ammoBlitPos[0], ammoBlitPos[1] + text.get_height()
 			screen.blit(text, ammoBlitPos )
 
@@ -155,7 +183,7 @@ def drawMouse(mousePos):
 			
 
 
-def goOverworld(player):
+def goSingleplayer(player):
 	global screen
 	fullscreen = False
 
@@ -249,9 +277,77 @@ def goOverworld(player):
 
 	if achievedWin:
 		goMessageScreen(" ".join(gameConfig["WIN_DEATH_MESSAGE"]), -1)
-		goMenu()
 	else:
 		goMessageScreen(" ".join(gameConfig["DEATH_MESSAGE"]), -1)
-		goMenu()
+	#Return to title screen
+	goTitleScreen()
+
+def goMultiplayer():
+	userInput = goMessageScreen(["Multiplayer", "(H)ost game", "(J)oin game"], -1).upper()
+	if userInput == "H":
+		goServer()
+	elif userInput == "J":
+		goClient()
+
+def goServer():
+	server = network.Server()
+	goMessageScreen("Waiting for clients!", -1)
+
+	killServer = False
+	while not killServer:
+		#connects clients until they send #IG
+		server.waitForClients()
+		serverLevel = level.ServerLevel("level path")
+		server.sendLevelFilePath(serverLevel.getLevelFilePath())
+		server.sendLevelDictionary(serverLevel.getLevelDictionary())
+		server.sendLevelPickups(serverLevel.getPickups())
+		server.sendLevelConstructed()
+		#server keeps track of which socket is connected with which player.
+		#it gives server level the ID of each player with the character file
+		serverLevel.addCharacters(server.recieveGameReadyWithCharacters())
+
+		#Gameplay
+
+		while serverLevel.playing == True:
+			serverLevel.updatePlay(server)
+			serverLevel.updateControl(server)
+	
+		serverLevel.showSummary()
+
+
+def goClient():
+	client = network.Client()
+	goMessageScreen("Looking for servers!", -1)
+	serverAddress = int(input("Enter server ip:"))
+	serverPort = int(input("Enter server port:"))
+	client.connectToServer(serverAddress, serverPort)
+
+	quitServer = False
+	while not quitServer:
+		#wait a bit
+		goMessageScreen(["Waiting for players, press any key to begin"], -1)
+		client.sendInitGame()
+		client.waitForInitGame()
+		clientLevel = level.ClientLevel(client.recieveLevelPath())
+		clientLevel.setupDictionary(client.recieveLevelDictionary())
+		clientLevel.setupPickups(client.recieveLevelPickups())
+		client.waitForLevelConstructed()
+
+		clientCharacter = chooseCharacter()
+		clientPlayer = person.Person(clientCharacter)
+		clientLevel.setPlayer(clientPlayer)
+		client.sendGameReadyWithCharacter(clientCharacter)
+
+		#Gameplay
+
+		while clientLevel.playing == True:
+			clientLevel.updatePlay(client)
+			clientLevel.updateControl(client)
+
+		clientLevel.showSummary()
+
+
+
+
 
 goTitleScreen() #Run our menu to start

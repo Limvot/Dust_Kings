@@ -2,16 +2,15 @@
 import socket
 from select import select
 
-HOST = '' #All availiable interfaces
 PORT = int(input("Use what port:"))
 
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serverSocket.setblocking(False)
-serverSocket.bind( (HOST, PORT) )
+serverSocket.bind( (socket.gethostname(), PORT) )
 serverSocket.listen(5)
 killServer = False
 clientSockets = []
-print("Server is", serverSocket)
+print("Server is", serverSocket, "at",socket.gethostname(), "at", serverSocket.getsockname())
 
 while not killServer:
 	socketsToRead, clientsToWrite, errord = select(clientSockets + [serverSocket], clientSockets,clientSockets)
